@@ -24,7 +24,7 @@
     <div id="main" v-else-if="startPage.mainOn">
       <v-app>
           <header>
-            <v-app-bar-nav-icon class="nav_btn"><v-icon></v-icon></v-app-bar-nav-icon>
+            <v-app-bar-nav-icon class="nav_btn"></v-app-bar-nav-icon>
           </header>
           <v-row no-gutters>
             <v-col offset-md="2" cols="12" md="8">
@@ -126,8 +126,9 @@ export default {
     goMain(){
       this.startPage.loginOn = false;
       this.startPage.mainOn = true;
-      if( this.$route.path != "/feed" ){
-        this.$router.push("/feed")
+      const urls = "/account"
+      if( this.$route.path != urls ){
+        this.$router.push(urls)
       }
     }
   }
