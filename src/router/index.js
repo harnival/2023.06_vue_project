@@ -1,21 +1,19 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 // main page //
-import feed from '@/components/feed'
-import account from '@/components/account'
-
+// import register from '@/components/register'
 Vue.use(VueRouter)
 
 const routes = [
-  ,{
-    name: "feed"
-    ,path: "/feed"
-    ,component: feed
-  }
-  ,{
-    name: "account"
-    ,path: "/account"
-    ,component : account
+  {
+    name: "login",
+    path: "/login",
+    component: () => {import('@/components/login')}
+  },
+  {
+    name: "register",
+    path: "/register",
+    component: function(){ return import("@/components/register") }
   }
 ]
 
