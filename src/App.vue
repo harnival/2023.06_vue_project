@@ -1,26 +1,19 @@
 <template>
-  <div class="register">
-            <form @submit.prevent="regist">
-                <v-text-field type="text" label="email" required></v-text-field>
-                <v-text-field type="password" label="password" required></v-text-field>
-                <v-btn type="submit">ggg</v-btn>
-            </form>
-        </div>
+  <header>
+    <div class="navBtn"></div>
+  </header>
+  <main>
+    <Login v-if="loginOn"/>
+    <Home v-else-if="homeOn"/>
+    <Playlist />
+  </main>
 </template>
-<script>
-import { register } from 'register-service-worker';
 
-export default{
-  data(){
-    return{
-      emails: 'sample1@sample.com',
-      passwords: 'sample2'
-    }
-  },
-  methods: {
-    regist(){
-      this.$store.dispatch('register',{email: this.emails, password: this.passwords})
-    }
-  }
-}
+<script setup>
+import Login from './components/login.vue';
+import Home from './components/home.vue';
+import Playlist from './components/playlist.vue';
+
+let loginOn, homeOn;
+
 </script>
