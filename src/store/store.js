@@ -4,17 +4,24 @@ import { createStore } from 'vuex'
 const store = createStore({
   state () {
     return {
-      pageRouting: ''
+      pageRouting: '',
+      langKor : true,
     }
   },
   mutations: {
     routing(state,payload){
       state.pageRouting = payload;
+    },
+    langChange(state){
+        state.langKor = !state.langKor
     }
   },
   getters: {
     page(state){
       return state.pageRouting
+    },
+    langKor(state){
+      return state.langKor
     }
   }
 })

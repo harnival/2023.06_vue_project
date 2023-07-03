@@ -22,7 +22,6 @@
             <div class="contentBox"></div>
         </div>
         <div class="randomHash">
-
         </div>
     </div>
 </template>
@@ -90,4 +89,5 @@ const playtimeCalc = function(item){
     const r = q.reduce((a,b) => a+b);
     return Math.floor(+r/60) + "분 " + (+r%60) + "초";
 }
+
 </script>
