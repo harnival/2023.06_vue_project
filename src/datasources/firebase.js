@@ -15,5 +15,10 @@ const useFirebase = initializeApp(firebaseConfig);
 const useDatabase = getDatabase(useFirebase),
   useAuth = getAuth(useFirebase);
 
+const APIkey = async function(){
+  const q = await get(child(ref(useDatabase),'API_key')).val();
+  const w = await q.val()
+  return w
+}
 
-export {useDatabase, useAuth}
+export {useDatabase, useAuth, APIkey}

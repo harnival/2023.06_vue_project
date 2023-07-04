@@ -5,30 +5,32 @@
     </div>
   </header>
   <main>
-    <Login v-if="channel == 'Login'"/>
-    <Home v-else-if="channel == 'Home'"/>
-    <Playlist v-else-if="channel == 'Playlist'"/>
-    <Api />
+    <div class="logins">
+      <router-view></router-view>
+    </div>
+    <Playlist v-if="channel == 'Playlist'"/>
+    <Api v-else-if="channel == 'Api'"/>
   </main>
 </template>
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref} from 'vue';
-import Login from './components/login.vue';
-import Home from './components/home.vue';
-import Playlist from './components/playlist.vue';
+import {ref, onMounted} from 'vue';
 import {useStore} from 'vuex';
   const store = useStore();
+import { useRouter, useRoute } from 'vue-router';
+  const oRouter = useRouter();
+  const oRoute = useRoute();
+import Playlist from './components/playlist.vue';
 import Api from './components/api.vue'
 // common function ---------------------------------------------------------------------
-const lang = (a,b) => {
-  // a : kor , b = eng //
-  return store.getters.langKor? a : b
-}
 let channel = ref(store.getters.page);
 
-
+  if(store.getters.loginStateCheck) {
+    channel = 'main'
+  } else {
+    oRouter.push({name: 'logIn'});
+  }
 </script>
 
 <style>
