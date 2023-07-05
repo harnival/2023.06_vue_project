@@ -23,6 +23,7 @@ const store = createStore({
       return state.pageRouting
     },
     loginStateCheck(state){       // 로그인 정보 유무로 판단
+      console.log(state.loginState);
       return state.loginState != null  
     }
   },
