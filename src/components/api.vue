@@ -2,13 +2,28 @@
     <div>
         <input type="text" v-model="searchs">제목
         <button @click="getId">api</button>
+        <button @click="console.log(videos)">videos</button>
         <ul>
+            <li class="musicList">
+                <div class="ml_img">
+                    <img src="/img/img/rodent.png" alt="">
+                    <div class="ml_i_cover">
+                        <img v-if="playerRun=='play'" src="/img/img/play.svg" alt="play">
+                        <img v-else-if="playerRun=='pause'" src="/img/img/pause.svg" alt="pause">
+                        <img v-else-if="playerRun=='replay'" src="/img/img/replay.svg" alt="replay">
+                    </div>
+                </div>
+                <div>
+                    <p class="ml_title"><strong>Attention</strong><span>NEW JEANS</span></p>
+
+                </div>
+            </li>
             <li class="musicList" v-for="item in videos" :key="item.id">
                 <img :src="item.thumbnail" width="200">
                 <div>
                     <h4>{{ item.title }}</h4>
                     <h5>{{ item.artist }}</h5>
-                    <p>{{ item.duration }}</p>
+                    <h5>{{ item.duration[0] }}</h5>
                 </div>
             </li>
         </ul>
@@ -58,14 +73,63 @@ async function getId(){
             thumbnail: item.snippet.thumbnails.high.url,
             url: `https://www.youtube.com/watch?v=${item.id.videoId}`}
     });
-    
-    videos.value = await dataArr;
+    const dataArr2 = await dataArr.map(item => {
+        axios.get("https://www.googleapis.com/youtube/v3/videos",{
+            params:{
+                part: 'contentDetails',
+                id: item.id,
+                key: APIkey
+            }
+        }).then( response => response.data.items[0].contentDetails.duration)
+        .then(response => item.duration = response.split(/[a-zA-Z]/))
+        return item
+    });
+
+    videos.value = await dataArr2;
     console.log(videos.value);
 }
+// ---------------------------------------------------------------------------
+let playerRun = 'play';
 </script>
 
 <style scoped>
 .musicList {
     display: flex;
+    border: 1px dashed tomato;
+    box-sizing: border-box;
+    height: max(14vh, 4rem);
+}
+.ml_img {
+    border: 1px solid black;
+    border-radius: 50%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: .5s ease;
+}
+.ml_img:hover {
+    box-shadow: 1px 2px 5px 0px #666;
+}
+.ml_i_cover {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.5);
+    opacity: 0.4;
+    transition: .5s ease;
+}
+.ml_i_cover:hover {
+    background-color: rgba(255,255,255,0.5);
+    opacity: 1;
+}
+.ml_i_cover img {
+    cursor: pointer;
+}
+.ml_img img {
+    display: block;
+    height: 100%;
 }
 </style>
