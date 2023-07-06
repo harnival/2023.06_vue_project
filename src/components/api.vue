@@ -190,7 +190,7 @@ const playState = function(){
 }
 .ml_img img {
     display: block;
-    height: 100%;
+    height: 150%;
 }
 .ml_i_cover img.removed {
     display: none;

@@ -85,32 +85,6 @@ const correct_pwd = function(e){
 
 let signCheck = ref(1)
 
-onMounted(function(){
-    inputMotion()
-})
-onUpdated(function(){
-    inputMotion()
-})
-const inputMotion = function(){
-    // ** styles --------------------------
-let inputs = document.querySelectorAll('.inputwrap input');
-inputs.forEach(v => {
-    const par = v.parentElement;
-    const lab = par.querySelector("label");
-    v.addEventListener("focus",function(){
-        lab.classList.add('label_focused','label_value')
-    })
-    v.addEventListener('blur',function(){
-        if(v.value == ""){
-            lab.classList.remove('label_focused','label_value')
-        } else {
-            lab.classList.remove('label_focused')
-        }
-    })
-})
-    //--------------------------------------
-}
-
 const createAccount = () => {
     console.log(btnDbl)
     if( btnDbl ) {

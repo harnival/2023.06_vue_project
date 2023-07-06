@@ -1,8 +1,7 @@
 <template>
     <div class="loginBox">
         <div class="inputs">
-            <button type="button" @click="router.push('/')">(임시) 메인으로 이동</button>
-            <form>
+            <form @submit.prevent="clickLogin">
                 <div>
                     <div class="inputwrap">
                         <label for="user_id">아이디 및 이메일</label>
@@ -16,7 +15,7 @@
                     </div>
                 </div>
                 <div class="inputBtn">
-                    <button type="button">로그인하기</button>
+                    <button type="submit">로그인하기</button>
                 </div>
             </form>
             <a href="" class="signInBtn" @click.prevent="router.push('/signin')">
@@ -29,27 +28,19 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, defineEmits, defineProps} from 'vue';
 import { useRouter,useRoute } from 'vue-router';
     const router = useRouter();
-    const route = useRoute();
-onMounted(function(){
-    let inputs = document.querySelectorAll('.inputwrap input');
-    inputs.forEach(v => {
-        const par = v.parentElement;
-        const lab = par.querySelector("label");
-        v.addEventListener("focus",function(){
-            lab.classList.add('label_focused','label_value')
-        })
-        v.addEventListener('blur',function(){
-            if(v.value == ""){
-                lab.classList.remove('label_focused','label_value')
-            } else {
-                lab.classList.remove('label_focused')
-            }
-        })
-    })
-})
+
+const clickLogin = function(e){
+    console.log(e)
+}
+// ------------------------------------
+const emits = defineEmits(['input-motion']);
+const inputMotion = function(){
+    emits('input-motion')
+}
+inputMotion();
 </script>
 
 <style scoped>

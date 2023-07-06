@@ -2,7 +2,8 @@
   <div id="appBox">
     <header>
       <div class="navBtn">
-        
+        <button type="button" @click="oRouter.push('/')">(임시) 메인으로 이동</button>
+        <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
       </div>
       <div class="nav_account">
         <div class="nav_a_avatar">
@@ -26,10 +27,9 @@
     </header>
     <main>
       <div class="logins">
-        <router-view></router-view>
+        <router-view @inputMotion="inputMotion"></router-view>
       </div>
       <div class="mainPage">
-        <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
         <Playlist v-if="channel == 'Playlist'"/>
         <Api v-else-if="channel == 'Api'"/>
       </div>
@@ -39,7 +39,7 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref, onMounted, onUpdated} from 'vue';
+import {ref, onMounted, reactive, computed} from 'vue';
 import {useStore} from 'vuex';
   const store = useStore();
 import { useRouter, useRoute } from 'vue-router';
@@ -60,6 +60,27 @@ onMounted(function(){
 
 let accountImg = ref('');
 let accountName = ref('sample name');
+
+// ** styles --------------------------
+const inputMotion = function(){
+  let oInputs = reactive(document.querySelectorAll(".inputWrap input"));
+  oInputs.forEach(v => {
+      const par = v.parentElement;
+      const lab = par.querySelector("label");
+      v.addEventListener("focus",function(){
+          lab.classList.add('label_focused','label_value')
+      })
+      v.addEventListener('blur',function(){
+          if(v.value == ""){
+              lab.classList.remove('label_focused','label_value')
+          } else {
+              lab.classList.remove('label_focused')
+          }
+      })
+  })
+}
+
+//--------------------------------------
 
 </script>
 
@@ -99,7 +120,6 @@ button {
   margin: 0 auto;
   border: 1px solid #aaa;
   box-sizing: border-box;
-  padding: 100px 0px;
 }
 .inputwrap {
   position: relative;
