@@ -10,22 +10,3 @@ self.addEventListener("install",function(e){
     }
     e.waitUntil(caching);
 });
-
-self.addEventListener('fetch',function(e){
-    e.respondWith(
-        cache.match(e.request)
-        .then(res => {
-            if(res){ return res}
-            const q = e.request.clone();    // catch the response
-            fetch(q).then(res => {
-                if(!res || res.status != 200 || res.type != 'basic') {return res}
-                const w = res.clone();
-                caches.open(cacheName)
-                .then(cache => {
-                    cache.put(e.request,w)
-                });
-                return res
-            })
-        })
-    )
-})

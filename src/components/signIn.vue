@@ -14,6 +14,7 @@
                         <label for="signin_pwd">비밀번호</label>
                         <input type="password" name="pwd" id="signin_pwd" v-model="userInfo.pwd" required>
                     </div>
+                    <br>
                     <div class="inputwrap">
                         <label for="signin_pwd">비밀번호 확인</label>
                         <input type="password" name="pwdconfirm" id="signin_pwdconfirm" required @change="correct_pwd">
@@ -27,21 +28,34 @@
 
 
             <div class="signpage_2 signpage" v-else-if="signinPage == 2">
-                <div class="avater">
-                    <div class="avatarWrap" @click="openFile">
-                        <img src="" alt="">
-                        <input type="file" name="avatar_img" id="avatar_img_input" accept="image/*" @input="uploadImg">
+                <p>가입이 완료되었습니다! 정보를 입력해주세요</p>
+                <div class="signpage_2_wrap">
+                    <div class="avatar">
+                        <div class="avatarWrap" @click="openFile">
+                            <div class="clickMe" v-if="clickme">click</div>
+                            <img src="">
+                            <input type="file" name="avatar_img" id="avatar_img_input" accept="image/*" @input="uploadImg">
+                        </div>
+                        <div class="avatar_text">
+                            <ul>
+                                <li>- 프로필 사진을 등록해주세요.</li>
+                                <li>- '내 정보' 에서 수정할 수 있습니다.</li>
+                                <li>- 또 뭐 쓰지</li>
+                                <li>- <span class="toDefaultImg" @click="resetImg">기본 이미지 적용하기</span></li>
+                            </ul>
+                        </div>
+                        <div class="avatarModal">
+                            <canvas></canvas>
+                        </div>
                     </div>
-                    <div class="avatarModal">
-                        <canvas></canvas>
+                    <div class="inputwrap">
+                        <label for="signin_nickname">이름</label>
+                        <input type="text" name="nickname" id="signin_nickname" v-model="userInfo.name" required>
                     </div>
                 </div>
-                <div class="inputwrap">
-                    <label for="signin_nickname">이름</label>
-                    <input type="text" name="nickname" id="signin_nickname" v-model="userInfo.name" required>
-                </div>
-                <div>
+                <div class="btns">
                     <button type="button" @click="saveInfo">저장</button>
+                    <button type="button">취소</button>
                 </div>
             </div>
 
@@ -53,7 +67,7 @@
 import {createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile} from 'firebase/auth'
 import {ref as dataRef, update} from 'firebase/database';
 import {useAuth, useDatabase} from '../datasources/firebase.js';
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, onUpdated, reactive, ref } from 'vue';
 import {useRouter} from 'vue-router'
     const oRouter = useRouter();
 import {useStore} from 'vuex';
@@ -72,24 +86,30 @@ const correct_pwd = function(e){
 let signCheck = ref(1)
 
 onMounted(function(){
-    // ** styles --------------------------
-    const inputs = document.querySelectorAll('.inputwrap input');
-    inputs.forEach(v => {
-        const par = v.parentElement;
-        const lab = par.querySelector("label");
-        v.addEventListener("focus",function(){
-            lab.classList.add('label_focused','label_value')
-        })
-        v.addEventListener('blur',function(){
-            if(v.value == ""){
-                lab.classList.remove('label_focused','label_value')
-            } else {
-                lab.classList.remove('label_focused')
-            }
-        })
-    })
-    //--------------------------------------
+    inputMotion()
 })
+onUpdated(function(){
+    inputMotion()
+})
+const inputMotion = function(){
+    // ** styles --------------------------
+let inputs = document.querySelectorAll('.inputwrap input');
+inputs.forEach(v => {
+    const par = v.parentElement;
+    const lab = par.querySelector("label");
+    v.addEventListener("focus",function(){
+        lab.classList.add('label_focused','label_value')
+    })
+    v.addEventListener('blur',function(){
+        if(v.value == ""){
+            lab.classList.remove('label_focused','label_value')
+        } else {
+            lab.classList.remove('label_focused')
+        }
+    })
+})
+    //--------------------------------------
+}
 
 const createAccount = () => {
     console.log(btnDbl)
@@ -120,15 +140,19 @@ const createAccount = () => {
     }
 }
 // upload avatar image -------------------------------------------------
+let clickme = ref(true);
 const openFile = () => {
     const avatarWrapFile = document.querySelector(".avatarWrap input");
     avatarWrapFile.click()
 }
 const uploadImg = (e) => {
     const img = document.querySelector(".avatarWrap img");
+    const avatarWrap = document.querySelector(".avatarWrap");
+    avatarWrap.style.background = '';
     const file = document.querySelector(".avatarWrap input").files[0];
     const reader = new FileReader();
     reader.addEventListener('load',function(){
+        clickme.value = null;
         img.src = reader.result;
         if( img.clientWidth >= img.clientHeight ){
             img.style.height = '100%'
@@ -137,8 +161,15 @@ const uploadImg = (e) => {
         }
     })
     if(file){
-        reader.readAsDataURL(file)
+        reader.readAsDataURL(file);
     }
+}
+const resetImg = () => {
+    const img = document.querySelector(".avatarWrap img")
+    img.src = "";
+    const avatarWrap = document.querySelector(".avatarWrap")
+    avatarWrap.style.background = 'url("/img/img/rodent.png") center/cover no-repeat'
+    clickme.value = true
 }
 // ---------------------------------------------------------------------
 const saveInfo = () => {
@@ -149,19 +180,31 @@ const saveInfo = () => {
     });
     update(dataRef(useDatabase,'account/'+ me.uid),{
         name: userInfo.name,
-        photoURL: userInfo.photoURL? userInfo.photoURL : "./img/img/rodent.png"
+        photoURL: userInfo.photoURL? userInfo.photoURL : "/img/img/rodent.png"
     })
 }
 </script>
 
 <style scoped>
+.signInBox {
+    width: 100%;
+    height: 100vh;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .signpage {
     margin: auto;
     width: min(100vw, 500px);
-    background-color: #eee;
 }
-.signpage_2 {
+.signpage_2_wrap {
+    display: block;
+}
+.avatar {
     display: flex;
+    justify-content: space-between;
+    padding: 1rem;
 }
 #avatar_img_input {
     display: none;
@@ -175,9 +218,29 @@ const saveInfo = () => {
     width: 10rem;
     aspect-ratio: 1/1;
     overflow: hidden;
+    cursor: pointer;
+    
 }
 .avatarWrap_img {
     width: 100%;
     height: 100%;
+}
+.clickMe {
+    background-color: royalblue;
+}
+.toDefaultImg {
+    text-decoration: underline;
+    cursor: pointer;
+}
+.btns {
+    padding-top: 2rem;
+}
+.btns button {
+    border: 0;
+    background-color: #ddd;
+    padding: 0.5em 1em;
+    font-size: 100%;
+    border-radius: 1em;
+    cursor: pointer;
 }
 </style>

@@ -7,7 +7,8 @@ const store = createStore({
   state () {
     return {
       pageRouting: '',
-      loginState : null
+      loginState : null,
+      nowSearchMusic: null
     }
   },
   mutations: {
@@ -16,6 +17,9 @@ const store = createStore({
     },
     loginAccount(state,payload){  // 로그인 시 사용자 정보 입력, 로그아웃 시 정보 삭제
       state.loginState = payload
+    },
+    storeSearching(state,payload){
+      state.nowSearchMusic = payload
     }
   },
   getters: {
@@ -25,6 +29,12 @@ const store = createStore({
     loginStateCheck(state){       // 로그인 정보 유무로 판단
       console.log(state.loginState);
       return state.loginState != null  
+    },
+    getAccount(state){
+      return state.loginState
+    },
+    getNowSearchMusic(state){
+      return state.nowSearchMusic
     }
   },
   actions: {
@@ -34,7 +44,8 @@ const store = createStore({
         id: usercredential.user.uid,
         name: usercredential.user.displayName,
         email: usercredential.user.email,
-        token: usercredential.user.getIdToken
+        token: usercredential.user.getIdToken,
+        photoURL: usercredential.user.photoURL
       }))
       .catch(err => {
         const code = err.code;

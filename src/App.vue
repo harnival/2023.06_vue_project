@@ -1,24 +1,45 @@
 <template>
-  <header>
-    <div class="navBtn">
-      
-    </div>
-  </header>
-  <main>
-    <div class="logins">
-      <router-view></router-view>
-    </div>
-    <div class="mainPage">
-      <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
-      <Playlist v-if="channel == 'Playlist'"/>
-      <Api v-else-if="channel == 'Api'"/>
-    </div>
-  </main>
+  <div id="appBox">
+    <header>
+      <div class="navBtn">
+        
+      </div>
+      <div class="nav_account">
+        <div class="nav_a_avatar">
+          <img src="/img/img/rodent.png">
+        </div>
+        <div class="nav_a_name">{{ accountName }}</div>
+        <div class="nav_a_menu">
+          <ul>
+            <li><a href="/">내 정보</a></li>
+            <li><a href="/">설정</a></li>
+          </ul>
+          <hr>
+          <dl>
+            <dt>내 플레이리스트</dt>
+            <dd><a href="/">sample playlist</a></dd>
+            <dd><a href="/">sample playlist</a></dd>
+            <dd><a href="/">sample playlist</a></dd>
+          </dl>
+        </div>
+      </div>
+    </header>
+    <main>
+      <div class="logins">
+        <router-view></router-view>
+      </div>
+      <div class="mainPage">
+        <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
+        <Playlist v-if="channel == 'Playlist'"/>
+        <Api v-else-if="channel == 'Api'"/>
+      </div>
+    </main>
+  </div>
 </template>
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, onUpdated} from 'vue';
 import {useStore} from 'vuex';
   const store = useStore();
 import { useRouter, useRoute } from 'vue-router';
@@ -36,27 +57,49 @@ onMounted(function(){
     oRouter.push({name: 'logIn'});
   }
 })
+
+let accountImg = ref('');
+let accountName = ref('sample name');
+
 </script>
 
 <style>
 :root {
-  --inputwrap-label-bg: #eee;
+  --inputwrap-label-bg: white;
+  --main-color1:rgb(255, 210, 11);
 }
 body {
   margin: 0;
   padding: 0;
   min-width: 320px;
 }
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  z-index: 8000;
+}
 ul,li {
   list-style: none;
   margin: 0px;
   padding: 0px;
 }
+button {
+  cursor: pointer;
+}
 #app {
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+}
+#appBox {
   max-width: 1280px;
   margin: 0 auto;
-  text-align: center;
-  border: 1px solid black;
+  border: 1px solid #aaa;
+  box-sizing: border-box;
+  padding: 100px 0px;
 }
 .inputwrap {
   position: relative;
@@ -94,31 +137,40 @@ label.label_value {
   font-size: 12px;
   transform: translateY(-180%);
 }
+.nav_account {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border: 1px solid black;
+  height: max(5vh, 4rem);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0px 1rem;
+}
+.nav_a_avatar {
+  height: 100%;
+  aspect-ratio: 1/1;
+  border: 1px solid #666;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.nav_a_avatar img {
+  width: 100%;
+
+}
+.nav_a_menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
 </style>
 <style scoped>
 .navBtn {
-  position: fixed;
-  z-index: 8000;
-  top: 0;
-  left: 0;
   height: 100vh;
   width: max-content;
   background-color: rgba(255,255,255);
-
-  padding: 20% 0;
-}
-nav ul {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: 1rem;
-}
-nav ul li {
-  width: 100%;
-  padding: 0 1rem;
-  box-sizing: border-box;
-}
-.navClose {
-  left: -100%;
 }
 </style>
