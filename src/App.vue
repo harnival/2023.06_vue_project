@@ -4,34 +4,49 @@
       <div class="navBtn">
         <button type="button" @click="oRouter.push('/')">(임시) 메인으로 이동</button>
         <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
+        <button type="button" @click="console.log(store.getters.getAccount)">[임시]loginState</button>
       </div>
-      <div class="nav_account">
-        <div class="nav_a_avatar">
-          <img src="/img/img/rodent.png">
+      <div class="accounts">
+        <div class="nav_account" v-if="loginStates">
+          <div class="nav_a_info" @click="slideAccount">
+            <div class="nav_a_avatar">
+              <img :src="!store.getters.getAccount.photoURL? '/img/img/rodent.png' : store.getters.getAccount.photoURL ">
+            </div>
+            <div class="nav_a_name">{{ !store.getters.getAccount.name? "이름을 입력하세요." : store.getters.getAccount.name }}</div>
+          </div>
+          <div class="nav_a_menu">
+            <div class="nav_a_menuWrap">
+              <ul>
+                <li><a href="/" >내 정보</a></li>
+                <li><a href="/">설정</a></li>
+                <li><a href="/">로그아웃</a></li>
+              </ul>
+              <hr>
+              <dl>
+                <dt>내 플레이리스트</dt>
+                <dd><a href="/">sample playlist</a></dd>
+                <dd><a href="/">sample playlist</a></dd>
+                <dd><a href="/">sample playlist</a></dd>
+              </dl>
+            </div>
+          </div>
         </div>
-        <div class="nav_a_name">{{ accountName }}</div>
-        <div class="nav_a_menu">
-          <ul>
-            <li><a href="/">내 정보</a></li>
-            <li><a href="/">설정</a></li>
-          </ul>
-          <hr>
-          <dl>
-            <dt>내 플레이리스트</dt>
-            <dd><a href="/">sample playlist</a></dd>
-            <dd><a href="/">sample playlist</a></dd>
-            <dd><a href="/">sample playlist</a></dd>
-          </dl>
+        <div class="logout_account" v-else>
+          <div class="nav_a_info" @click="oRouter.push('/login')">
+            <div class="nav_a_avatar">
+              <img src="/img/img/rodent.png">
+            </div>
+            <div class="nav_logout_name">로그인 바로가기</div>
+          </div>
+
         </div>
       </div>
     </header>
     <main>
       <div class="logins">
-        <router-view @inputMotion="inputMotion"></router-view>
+        <router-view></router-view>
       </div>
       <div class="mainPage">
-        <Playlist v-if="channel == 'Playlist'"/>
-        <Api v-else-if="channel == 'Api'"/>
       </div>
     </main>
   </div>
@@ -39,49 +54,44 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref, onMounted, reactive, computed} from 'vue';
+import {ref, onMounted} from 'vue';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from './datasources/firebase';
 import {useStore} from 'vuex';
   const store = useStore();
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter} from 'vue-router';
   const oRouter = useRouter();
-  const oRoute = useRoute();
-import Playlist from './components/playlist.vue';
-import Api from './components/api.vue'
+
 
 // common function ---------------------------------------------------------------------
-let channel = ref(store.getters.page);
 onMounted(function(){
-  if(store.getters.loginStateCheck) {
-    channel = 'main'
+  store.dispatch('logout');
+})
+
+// 실시간 로그인 확인 //
+let loginStates = ref(false);
+onAuthStateChanged(useAuth,(user) => {
+  if(user){
+    oRouter.push('/');
+    loginStates.value = true;
   } else {
-    oRouter.push({name: 'logIn'});
+      console.log('change logout')
+      loginStates.value = false;
+      oRouter.push('/login')
   }
 })
 
-let accountImg = ref('');
-let accountName = ref('sample name');
-
-// ** styles --------------------------
-const inputMotion = function(){
-  let oInputs = reactive(document.querySelectorAll(".inputWrap input"));
-  oInputs.forEach(v => {
-      const par = v.parentElement;
-      const lab = par.querySelector("label");
-      v.addEventListener("focus",function(){
-          lab.classList.add('label_focused','label_value')
-      })
-      v.addEventListener('blur',function(){
-          if(v.value == ""){
-              lab.classList.remove('label_focused','label_value')
-          } else {
-              lab.classList.remove('label_focused')
-          }
-      })
-  })
+// account 메뉴 슬라이드 클릭 이벤트 //
+const slideAccount = function(){
+  const menu = document.querySelector(".nav_a_menu");
+  const h = document.querySelector(".nav_a_menuWrap").offsetHeight;
+  menu.classList.toggle('drawing');
+  if(menu.classList.contains('drawing')){
+    menu.style.height = h + "px"
+  } else {
+    menu.style.height = 0 + "px"
+  }
 }
-
-//--------------------------------------
-
 </script>
 
 <style>
@@ -155,18 +165,15 @@ label.label_focused {
 label.label_value {
   z-index: 10;
   font-size: 12px;
-  transform: translateY(-180%);
+  transform: translateX(-100%);
 }
+/* --------------------------------------------- */
+/* --------------------------------------------- */
 .nav_account {
   position: absolute;
   right: 0;
   top: 0;
-  border: 1px solid black;
   height: max(5vh, 4rem);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0px 1rem;
 }
 .nav_a_avatar {
   height: 100%;
@@ -185,12 +192,50 @@ label.label_value {
   left: 0;
   width: 100%;
   overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  align-items: end;
+  height: 0px;
+  transition: .4s ease;
+}
+.nav_a_menuWrap {
+  width: 100%;
+  padding: 1rem 0px;
 }
 </style>
+
 <style scoped>
 .navBtn {
   height: 100vh;
   width: max-content;
   background-color: rgba(255,255,255);
 }
+.nav_a_info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0px 3rem 0px 1rem;
+  height: 100%;
+  border: 1px solid black;
+  cursor: pointer;
+  transition: .3s ease;
+}
+.nav_a_info:hover {
+  background-color: #efefef;
+}
+.nav_a_name{
+  position: relative;
+}
+.nav_a_name::after {
+  content: '';
+  background: url('/img/img/chevron-down.svg') no-repeat center/1.2rem 1.2rem;
+  display: block;
+  width: 1rem;
+  height: 100%;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  padding-left: 5px;
+}
+
 </style>

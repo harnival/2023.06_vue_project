@@ -10,3 +10,16 @@ self.addEventListener("install",function(e){
     }
     e.waitUntil(caching);
 });
+
+self.addEventListener('fetch',function(event){
+    event.respondWith(
+        caches.open(cacheName)
+        .then(function(cache){
+            return cache.match(event.request)
+                .then(function(res){
+                    if (res) { return res}
+                    else { return fetch(event.request)}
+                })
+        })
+    )
+})

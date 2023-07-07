@@ -1,17 +1,17 @@
 <template>
-    <div class="loginBox">
+    <div id="loginBox">
         <div class="inputs">
-            <form @submit.prevent="clickLogin">
+            <form @submit.prevent="clickLogin" id="loginForm">
                 <div>
-                    <div class="inputwrap">
+                    <div class="inputwrap" id="inputwrap_id">
                         <label for="user_id">아이디 및 이메일</label>
-                        <input type="text" name="user_id" id="user_id">
+                        <input type="text" name="user_id" id="user_id" autocomplete="off">
                     </div>
                     <br>
                     <br>
-                    <div class="inputwrap">
+                    <div class="inputwrap" id="inputwrap_pwd">
                         <label for="user_pwd">비밀번호</label>
-                        <input type="password" name="user_pwd" id="user_pwd">
+                        <input type="password" name="user_pwd" id="user_pwd" autocomplete="off">
                     </div>
                 </div>
                 <div class="inputBtn">
@@ -28,23 +28,77 @@
 </template>
 
 <script setup>
-import {onMounted, ref, defineEmits, defineProps} from 'vue';
-import { useRouter,useRoute } from 'vue-router';
+import {onMounted, onUpdated, ref} from 'vue';
+import { useRouter} from 'vue-router';
     const router = useRouter();
-
-const clickLogin = function(e){
-    console.log(e)
-}
-// ------------------------------------
-const emits = defineEmits(['input-motion']);
+import {useAuth, useDatabase} from '../datasources/firebase.js'
+import { useStore } from 'vuex';
+    const store = useStore();
+import { signInWithEmailAndPassword} from 'firebase/auth';
+// input motion ------------------------------------
+onMounted(function(){
+  inputMotion();
+})
+onUpdated(function(){
+    inputMotion();
+})
 const inputMotion = function(){
-    emits('input-motion')
+  let oInputs = document.querySelectorAll(".inputwrap input");
+  oInputs.forEach(v => {
+      const par = v.parentElement;
+      const lab = par.querySelector("label");
+      v.addEventListener("focus",function(){
+          lab.classList.add('label_focused','label_value')
+          v.classList.remove('requireInput');
+          par.classList.remove('requireInput');
+          loginForm.classList.remove('wrongLogin');
+      })
+      v.addEventListener('blur',function(){
+          if(v.value == ""){
+              lab.classList.remove('label_focused','label_value')
+          } else {
+              lab.classList.remove('label_focused')
+          }
+      })
+  })
 }
-inputMotion();
+// login ---------------------------------------------------
+const clickLogin = function(e){
+    const data = new FormData(e.target);
+    const dataobj = Object.fromEntries(data.entries());
+    if ( !dataobj.user_id || !dataobj.user_id.match(/@/) ) {
+        inputwrap_id.classList.add("requireInput");
+        user_id.classList.add("requireInput");
+        return;
+    } else if ( !dataobj.user_pwd ) {
+        inputwrap_pwd.classList.add("requireInput");
+        user_pwd.classList.add("requireInput");
+        return;
+    }else {
+        // store.dispatch('loginWithEmail',dataobj);
+        signInWithEmailAndPassword(useAuth, dataobj.user_id , dataobj.user_pwd)
+        .then(usercredential => {
+            const user = usercredential.user;
+            store.commit('loginAccount',{
+                id: user.uid,
+                name: user.displayName,
+                email: user.email,
+                token: user.getIdToken,
+                photoURL: user.photoURL
+            });
+        })
+        .catch(err => {
+            const code = err.code;
+            const message = err.message;
+            console.log("[Login Error]" + code + " => " + message);
+        })
+    }
+}
+
 </script>
 
 <style scoped>
-.loginBox {
+#loginBox {
     width: 100%;
     height: 100vh;
     background-color: transparent;
@@ -52,8 +106,48 @@ inputMotion();
     justify-content: center;
     align-items: center;
 }
-.inputs form{
+#loginForm{
     position: relative;
+    margin-bottom: 2rem;
+}
+#loginForm.wrongLogin::before {
+    content: '이메일 또는 비밀번호가 틀렸습니다. 다시 입력해주세요.';
+    position: absolute;
+    bottom: 120%;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    color: red;
+    font-size: 90%;
+    white-space: nowrap;
+    word-break: keep-all;
+
+}
+#user_id.requireInput,
+#user_pwd.requireInput {
+    border: 2px solid red;
+    position: relative;
+}
+#inputwrap_id.requireInput::after{
+    content: '이메일을 입력해주세요.';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    display: block;
+    color: red;
+    font-size: 90%;
+}
+#inputwrap_pwd.requireInput::after{
+    content: '비밀번호를 입력해주세요.';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    display: block;
+    color: red;
+    font-size: 90%;
 }
 .signInBtn {
     display: block;

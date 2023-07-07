@@ -7,7 +7,7 @@
                 <button class="sb_btn" @click="getId">api</button>
             </div>
         </div>
-        <button @click="console.log(videos)">videos</button>
+        <button @click="console.log(store.getters.getNowSearchMusic)">videos</button>
         <ul>
             <li class="musicList" v-for="item in videos" :key="item.id">
                 <div class="ml_img_wrap">
@@ -49,7 +49,7 @@
 import axios from 'axios';
 import {ref as dataRef, get, child} from 'firebase/database';
 import {useDatabase} from '../datasources/firebase.js'
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, onUpdated, watchEffect } from 'vue';
 import store from '../store/store';
 // common ------------------------------------------------------------------
 const inputFocus = () => {
@@ -81,6 +81,7 @@ onMounted(function(){
 //----------------------------------------------------------------
 
 let videos = ref([]);
+let cover = reactive(document.querySelectorAll(".ml_i_cover"))
 onMounted(function(){
     videos.value = store.getters.getNowSearchMusic;
 })
@@ -100,7 +101,7 @@ async function getId(){
     });
     const dataArr = await res.data.items.map(item => ({
             id: item.id.videoId,
-            title: item.snippet.title.replaceAll('&#39;',`'`),
+            title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
             artist: (item.snippet.channelTitle).split(' - Topic')[0],
             thumbnail: item.snippet.thumbnails.high.url,
             url: `https://www.youtube.com/watch?v=${item.id.videoId}`
@@ -118,25 +119,22 @@ async function getId(){
 
     Promise.all(durationPromises).then(durations => {
         dataArr.forEach((item, index) => {
-        item.duration = durations[index].match(/[0-9]+/g);
-    })}).then(res => videos.value = dataArr)
-
-    store.commit('storeSearching',dataArr);
-    console.log(videos.value);
-    console.log(dataArr);
-}
-// ---------------------------------------------------------------------------
-const playState = function(){
-    const musicList = document.querySelectorAll(".musicList");
-    musicList.forEach(v => {
-        v.querySelector(".ml_i_play").addEventListener('click',function(){
-            v.querySelector(".ml_p_bar").classList.add("playStart");
-            v.querySelector(".ml_p_current").classList.add("playStart");
-            this.classList.add("removed");
-            v.querySelector(".ml_i_pause").classList.remove("removed");
+            item.duration = durations[index].match(/[0-9]+/g);
         })
+    }).then(res => {
+        videos.value = dataArr;
+        store.commit('storeSearching',dataArr);
+        console.log(videos.value);
+        console.log(dataArr);
     })
+    
 }
+watchEffect(function(){
+   console.log(cover)
+})
+// ---------------------------------------------------------------------------
+
+
 </script>
 
 <style scoped>
@@ -178,17 +176,21 @@ const playState = function(){
     background-color: rgba(255,255,255,0.5);
     opacity: 0.4;
     transition: .5s ease;
+    cursor: pointer;
 }
 .ml_i_cover:hover {
     background-color: rgba(255,255,255,0.5);
     opacity: 1;
 }
 .ml_i_cover img {
-    cursor: pointer;
+    display: none;
     /* transform-origin: center;
     transform: scale(0.6,0.6); */
 }
-.ml_img img {
+.ml_i_cover img.show {
+    display: block;
+}
+.ml_i_album {
     display: block;
     height: 150%;
 }
@@ -261,9 +263,46 @@ const playState = function(){
 .ml_m_add {
     background: url('/img/img/plus.png') center/80% no-repeat;
     margin-bottom: 3px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.ml_m_add:hover:before {
+    content: '내 플레이리스트에 추가';
+    display: flex;
+    align-items: center;
+    padding: 0.5em;
+    font-size: 0.8rem;
+    position: absolute;
+    right: 120%;
+    width: fit-content;
+    height: 100%;
+    word-break: keep-all;
+    white-space: nowrap;
+    background-color: rgba(0,0,0,0.4);
+    border-radius: 1em;
+    color: white;
 }
 .ml_m_search {
     background: url('/img/img/search.svg') center/80% no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.ml_m_search:hover:before {
+    content: '해당 곡이 들어간 플레이리스트 검색';
+    display: flex;
+    align-items: center;
+    padding: 0.5em;
+    font-size: 0.8rem;
+    position: absolute;
+    right: 120%;
+    width: 10em;
+    height: 100%;
+    word-break: keep-all;
+    background-color: rgba(0,0,0,0.4);
+    border-radius: 1em;
+    color: white;
 }
 .searchBox {
     position: relative;

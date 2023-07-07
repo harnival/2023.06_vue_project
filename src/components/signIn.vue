@@ -1,5 +1,5 @@
 <template>
-    <div class="signInBox">
+    <div id="signInBox">
         <form>
             <div class="signpage_1 signpage" v-if="signinPage == 1">
                 <div class="inputwrap">
@@ -27,7 +27,7 @@
             </div>
 
 
-            <div class="signpage_2 signpage" v-else-if="signinPage == 2">
+            <div class="signpage_2 signpage" v-else-if="signinPage == 2" >
                 <p>가입이 완료되었습니다! 정보를 입력해주세요</p>
                 <div class="signpage_2_wrap">
                     <div class="avatar">
@@ -76,7 +76,7 @@ import {useStore} from 'vuex';
 let userInfo = reactive({});
 let btnDbl = ref(false)
 let pwdInfo_text = ref('');
-let signinPage = ref(2)
+let signinPage = ref(1)
 const correct_pwd = function(e){
     const n = e.target.value;
     pwdInfo_text.value = n == userInfo.pwd? "비밀번호가 일치합니다." : "다시 확인해주세요."
@@ -133,6 +133,7 @@ const uploadImg = (e) => {
         } else {
             img.style.width = '100%'
         }
+        userInfo.photoURL = reader.result;
     })
     if(file){
         reader.readAsDataURL(file);
@@ -156,11 +157,37 @@ const saveInfo = () => {
         name: userInfo.name,
         photoURL: userInfo.photoURL? userInfo.photoURL : "/img/img/rodent.png"
     })
+    oRouter.push("/")
+}
+// -----------------------------------------------------------------------
+let oInputs = reactive(document.querySelectorAll(".inputwrap input"));
+onMounted(function(){
+  inputMotion();
+})
+onUpdated(function(){
+  inputMotion();
+})
+const inputMotion = function(){
+    oInputs = document.querySelectorAll(".inputwrap input")
+    oInputs.forEach(v => {
+        const par = v.parentElement;
+        const lab = par.querySelector("label");
+        v.addEventListener("focus",function(){
+            lab.classList.add('label_focused','label_value')
+        })
+        v.addEventListener('blur',function(){
+            if(v.value == ""){
+                lab.classList.remove('label_focused','label_value')
+            } else {
+                lab.classList.remove('label_focused')
+            }
+        })
+    })
 }
 </script>
 
 <style scoped>
-.signInBox {
+#signInBox {
     width: 100%;
     height: 100vh;
     background-color: transparent;
