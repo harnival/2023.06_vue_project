@@ -17,16 +17,17 @@
           <div class="nav_a_menu">
             <div class="nav_a_menuWrap">
               <ul>
-                <li><a href="/" >내 정보</a></li>
-                <li><a href="/">설정</a></li>
-                <li><a href="/">로그아웃</a></li>
+                <li><a href="/" @click.prevent>내 정보</a></li>
+                <li><a href="/" @click.prevent>설정</a></li>
+                <li><a href="/" @click.prevent>로그아웃</a></li>
               </ul>
               <hr>
               <dl>
                 <dt>내 플레이리스트</dt>
-                <dd><a href="/">sample playlist</a></dd>
-                <dd><a href="/">sample playlist</a></dd>
-                <dd><a href="/">sample playlist</a></dd>
+                <dd class="nav_a_menu_nolist"><p>플레이리스트가 없습니다.</p></dd>
+                <!-- <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd>
+                <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd>
+                <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd> -->
               </dl>
             </div>
           </div>
@@ -43,10 +44,8 @@
       </div>
     </header>
     <main>
-      <div class="logins">
+      <div class="mainWrap">
         <router-view></router-view>
-      </div>
-      <div class="mainPage">
       </div>
     </main>
   </div>
@@ -54,12 +53,13 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref, onMounted} from 'vue';
+import {ref,reactive, onMounted} from 'vue';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useAuth } from './datasources/firebase';
+import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
   const store = useStore();
 import { useRouter} from 'vue-router';
+import { get, ref as dataRef, onValue } from 'firebase/database';
   const oRouter = useRouter();
 
 
@@ -70,15 +70,30 @@ onMounted(function(){
 
 // 실시간 로그인 확인 //
 let loginStates = ref(false);
+let currentUid = ref('');
+let currentUserInfo = reactive({});
 onAuthStateChanged(useAuth,(user) => {
   if(user){
+    console.log("[now] login states")
     oRouter.push('/');
     loginStates.value = true;
+
+    currentUid.value = user.uid;    
+    store.commit('loginAccount', user.uid);
+    console.log(store.getters.getAccount);
   } else {
-      console.log('change logout')
+      console.log('[now] logout states')
       loginStates.value = false;
       oRouter.push('/login')
   }
+})
+
+// 유저 정보 실시간 로드 //
+const userDB = dataRef(useDatabase, 'account/:currentUid');
+onValue(userDB,function(snapshot){
+  const data = snapshot.val();
+  currentUserInfo = data;
+  console.log("Success User Info Call => " + currentUserInfo)
 })
 
 // account 메뉴 슬라이드 클릭 이벤트 //
@@ -201,6 +216,12 @@ label.label_value {
 .nav_a_menuWrap {
   width: 100%;
   padding: 1rem 0px;
+}
+.nav_a_menu_playlist {
+  color: #ddd;
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
 }
 </style>
 

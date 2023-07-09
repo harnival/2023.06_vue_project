@@ -18,10 +18,12 @@
                     <button type="submit">로그인하기</button>
                 </div>
             </form>
-            <a href="" class="signInBtn" @click.prevent="router.push('/signin')">
-                계정이 없으신가요?
-                <span>회원가입</span>
-            </a>
+            <div class="btnWrap">
+                <a href="" class="signInBtn" @click.prevent="router.push('/signin')">
+                    계정이 없으신가요?
+                    <span>회원가입</span>
+                </a>
+            </div>
 
         </div>
     </div>
@@ -128,6 +130,7 @@ const clickLogin = function(e){
 #user_pwd.requireInput {
     border: 2px solid red;
     position: relative;
+    box-sizing: border-box;
 }
 #inputwrap_id.requireInput::after{
     content: '이메일을 입력해주세요.';
@@ -153,8 +156,10 @@ const clickLogin = function(e){
     display: block;
     font-size: 80%;
     color: #666;
-    padding-top: 1rem;
     text-decoration: none;
+}
+.btnWrap {
+    padding-top: 1rem;
 }
 .signInBtn span {
     text-decoration: underline;

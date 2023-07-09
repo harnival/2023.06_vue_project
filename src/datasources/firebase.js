@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get, child } from "firebase/database";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCYx67Ob7AurTlGjqltJtHly55VI9CpRhc",
@@ -20,5 +20,4 @@ const APIkey = async function(){
   const w = await q.val()
   return w
 }
-
 export {useDatabase, useAuth, APIkey}

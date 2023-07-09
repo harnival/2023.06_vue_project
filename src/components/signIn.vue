@@ -95,7 +95,10 @@ const createAccount = () => {
                     email: user.email,
                     uid: user.uid,
                     name: user.displayName? user.displayName : "",
-                    photoURL: user.photoURL? user.photoURL : ""
+                    photoURL: user.photoURL? user.photoURL : "",
+                    playlist: [],
+                    follower: [],
+                    follering: []
                 };
                 update(dataRef(useDatabase,'account/'+user.uid),userData);
                 store.commit('loginAccount',userData);
