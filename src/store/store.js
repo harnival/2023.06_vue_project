@@ -8,7 +8,8 @@ const store = createStore({
     return {
       pageRouting: '',
       loginState : null,
-      nowSearchMusic: null
+      nowSearchMusic: null,
+      wholeData: null
     }
   },
   mutations: {
@@ -20,6 +21,9 @@ const store = createStore({
     },
     storeSearching(state,payload){
       state.nowSearchMusic = payload
+    },
+    setWholeData(state,payload){
+      state.wholeData = payload
     }
   },
   getters: {
@@ -34,6 +38,9 @@ const store = createStore({
     },
     getNowSearchMusic(state){
       return state.nowSearchMusic
+    },
+    getWholeData(state){
+      return state.wholeData
     }
   },
   actions: {

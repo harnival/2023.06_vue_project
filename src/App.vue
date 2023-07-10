@@ -2,24 +2,23 @@
   <div id="appBox">
     <header>
       <div class="navBtn">
-        <button type="button" @click="oRouter.push('/')">(임시) 메인으로 이동</button>
         <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
-        <button type="button" @click="console.log(store.getters.getAccount)">[임시]loginState</button>
+        <button type="button" @click="console.log(store.getters.getAccount, useAuth.currentUser)">[임시]loginState</button>
       </div>
       <div class="accounts">
-        <div class="nav_account" v-if="loginStates">
+        <div class="nav_account" v-if="store.getters.loginStateCheck">
           <div class="nav_a_info" @click="slideAccount">
             <div class="nav_a_avatar">
-              <img :src="!store.getters.getAccount.photoURL? '/img/img/rodent.png' : store.getters.getAccount.photoURL ">
+              <img :src="userimgs">
             </div>
-            <div class="nav_a_name">{{ !store.getters.getAccount.name? "이름을 입력하세요." : store.getters.getAccount.name }}</div>
+            <div class="nav_a_name">{{ usernames }}</div>
           </div>
           <div class="nav_a_menu">
             <div class="nav_a_menuWrap">
               <ul>
-                <li><a href="/" @click.prevent>내 정보</a></li>
+                <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
                 <li><a href="/" @click.prevent>설정</a></li>
-                <li><a href="/" @click.prevent>로그아웃</a></li>
+                <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
               <hr>
               <dl>
@@ -33,13 +32,8 @@
           </div>
         </div>
         <div class="logout_account" v-else>
-          <div class="nav_a_info" @click="oRouter.push('/login')">
-            <div class="nav_a_avatar">
-              <img src="/img/img/rodent.png">
-            </div>
-            <div class="nav_logout_name">로그인 바로가기</div>
-          </div>
-
+          <button type="button">로그인</button>
+          <button type="button">회원가입</button>
         </div>
       </div>
     </header>
@@ -53,48 +47,42 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onMounted} from 'vue';
-import { onAuthStateChanged } from 'firebase/auth';
+import {ref,reactive, onMounted, onBeforeMount} from 'vue';
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
   const store = useStore();
 import { useRouter} from 'vue-router';
-import { get, ref as dataRef, onValue } from 'firebase/database';
-  const oRouter = useRouter();
+const oRouter = useRouter();
+import { get, ref as dataRef, onValue} from 'firebase/database';
 
 
-// common function ---------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
 onMounted(function(){
-  store.dispatch('logout');
+  store.dispatch('logout')
 })
-
-// 실시간 로그인 확인 //
-let loginStates = ref(false);
-let currentUid = ref('');
-let currentUserInfo = reactive({});
+// 첫 mount 시, 기본값은 로그인 화면, 이미 로그인된 상태면 바로 메인화면으로 //
+// 실시간 로그인 상태에 따라 페이지 변경 //
+let usernames = ref('');
+let userimgs = ref('');
+onValue(dataRef(useDatabase,'account'),function(data){
+  const q = data.val();
+  store.commit('setWholeData', q);
+})
 onAuthStateChanged(useAuth,(user) => {
-  if(user){
-    console.log("[now] login states")
+  if (user) {
+    const keys = user.uid;
+    const storeData = store.getters.getWholeData;
+    console.log(storeData[keys]); 
     oRouter.push('/');
-    loginStates.value = true;
-
-    currentUid.value = user.uid;    
-    store.commit('loginAccount', user.uid);
-    console.log(store.getters.getAccount);
-  } else {
-      console.log('[now] logout states')
-      loginStates.value = false;
-      oRouter.push('/login')
+    
+  }else {
+    usernames.value = "로그인이 필요합니다."
+    userimgs.value = "/img/img/rodent.png"
+    oRouter.push('/logIn')
   }
 })
 
-// 유저 정보 실시간 로드 //
-const userDB = dataRef(useDatabase, 'account/:currentUid');
-onValue(userDB,function(snapshot){
-  const data = snapshot.val();
-  currentUserInfo = data;
-  console.log("Success User Info Call => " + currentUserInfo)
-})
 
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
@@ -106,6 +94,10 @@ const slideAccount = function(){
   } else {
     menu.style.height = 0 + "px"
   }
+}
+
+const goAccount = function(){
+  oRouter.push({ name: 'account', params : { ids : 'my', userInfo: useAuth.currentUser }})
 }
 </script>
 

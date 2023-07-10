@@ -30,14 +30,14 @@
 </template>
 
 <script setup>
-import {onMounted, onUpdated, ref} from 'vue';
+import {onBeforeMount, onMounted, onUpdated, ref} from 'vue';
 import { useRouter} from 'vue-router';
     const router = useRouter();
 import {useAuth, useDatabase} from '../datasources/firebase.js'
 import { useStore } from 'vuex';
     const store = useStore();
 import { signInWithEmailAndPassword} from 'firebase/auth';
-// input motion ------------------------------------
+// [common] input motion ------------------------------------
 onMounted(function(){
   inputMotion();
 })
@@ -64,10 +64,12 @@ const inputMotion = function(){
       })
   })
 }
+
 // login ---------------------------------------------------
 const clickLogin = function(e){
     const data = new FormData(e.target);
     const dataobj = Object.fromEntries(data.entries());
+    // 입력 확인 //
     if ( !dataobj.user_id || !dataobj.user_id.match(/@/) ) {
         inputwrap_id.classList.add("requireInput");
         user_id.classList.add("requireInput");
@@ -77,7 +79,7 @@ const clickLogin = function(e){
         user_pwd.classList.add("requireInput");
         return;
     }else {
-        // store.dispatch('loginWithEmail',dataobj);
+        // 로그인 에러 확인 및 완료 --> 사용자 정보 저장 후 메인 페이지로 이동
         signInWithEmailAndPassword(useAuth, dataobj.user_id , dataobj.user_pwd)
         .then(usercredential => {
             const user = usercredential.user;
@@ -88,6 +90,7 @@ const clickLogin = function(e){
                 token: user.getIdToken,
                 photoURL: user.photoURL
             });
+            router.push('/')
         })
         .catch(err => {
             const code = err.code;

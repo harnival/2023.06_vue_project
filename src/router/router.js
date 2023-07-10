@@ -13,6 +13,10 @@ const routes = [
     name: 'main',
     path: '/',
     component: () => import('../components/main.vue')
+  },{
+    name: 'account',
+    path: '/account/:ids',
+    component: () => import('../components/account.vue')
   }
 ];
 
