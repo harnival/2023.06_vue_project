@@ -2,31 +2,35 @@
   <div id="appBox">
     <header>
       <div class="navBtn">
-        <button type="button" @click="channel = 'Api'">(임시) api.vue</button>
+        <button type="button" @click="store.dispatch('logout')">(임시) logout</button>
+        <button type="button" @click="store.commit('routing','Api')">(임시) api.vue</button>
         <button type="button" @click="console.log(store.getters.getAccount, useAuth.currentUser)">[임시]loginState</button>
       </div>
       <div class="accounts">
         <div class="nav_account" v-if="store.getters.loginStateCheck">
           <div class="nav_a_info" @click="slideAccount">
             <div class="nav_a_avatar">
-              <img :src="userimgs">
+              <img :src="store.getters.getAccount.photoURL">
             </div>
-            <div class="nav_a_name">{{ usernames }}</div>
+            <div class="nav_a_name">{{ store.getters.getAccount.name }}</div>
           </div>
           <div class="nav_a_menu">
             <div class="nav_a_menuWrap">
+              <ul>
+                <li><a href="/" @click.prevent>홈</a></li>
+                <li><a href="/" @click.prevent>탐색</a></li>
+                <li><a href="/" @click.prevent>음악 검색</a></li>
+              </ul>
+              <hr/>
               <ul>
                 <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
                 <li><a href="/" @click.prevent>설정</a></li>
                 <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
-              <hr>
+              <hr>              
               <dl>
                 <dt>내 플레이리스트</dt>
                 <dd class="nav_a_menu_nolist"><p>플레이리스트가 없습니다.</p></dd>
-                <!-- <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd>
-                <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd>
-                <dd class="nav_a_menu_playlist"><a href="/">sample playlist</a></dd> -->
               </dl>
             </div>
           </div>
@@ -35,10 +39,16 @@
           <button type="button">로그인</button>
           <button type="button">회원가입</button>
         </div>
+        <nav>
+          
+        </nav>
       </div>
     </header>
     <main>
-      <div class="mainWrap">
+      <div class="loadingPage" v-if="store.getters.getSetLoading">
+        <h2>LOADING.........</h2>
+      </div>
+      <div class="mainWrap" v-else>
         <router-view></router-view>
       </div>
     </main>
@@ -47,43 +57,55 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onMounted, onBeforeMount} from 'vue';
-import { onAuthStateChanged, updateProfile } from 'firebase/auth';
+import {ref,reactive, onBeforeMount} from 'vue';
+import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
   const store = useStore();
-import { useRouter} from 'vue-router';
-const oRouter = useRouter();
+import { useRouter, useRoute } from 'vue-router';
+  const oRouter = useRouter();
 import { get, ref as dataRef, onValue} from 'firebase/database';
 
-
+let userInfo = reactive({});
 // -------------------------------------------------------------------------------------
-onMounted(function(){
-  store.dispatch('logout')
-})
-// 첫 mount 시, 기본값은 로그인 화면, 이미 로그인된 상태면 바로 메인화면으로 //
-// 실시간 로그인 상태에 따라 페이지 변경 //
-let usernames = ref('');
-let userimgs = ref('');
-onValue(dataRef(useDatabase,'account'),function(data){
-  const q = data.val();
-  store.commit('setWholeData', q);
-})
-onAuthStateChanged(useAuth,(user) => {
-  if (user) {
-    const keys = user.uid;
-    const storeData = store.getters.getWholeData;
-    console.log(storeData[keys]); 
-    oRouter.push('/');
-    
-  }else {
-    usernames.value = "로그인이 필요합니다."
-    userimgs.value = "/img/img/rodent.png"
+// 첫 로딩 시 로그인 유무 체크 //
+onBeforeMount(async function(){
+  let current = ref(null);
+  const q = new Promise(res => {
+    store.commit('setSetLoading',true)
+    onAuthStateChanged(useAuth, user => {
+      res(user)
+    })
+  });
+  current.value = await q;
+  if( current.value ) {
+    const load = await get(dataRef(useDatabase,'account/' + current.value.uid))
+    store.commit('loginAccount', load.val());
+    store.commit('setSetLoading',false)
+    oRouter.push('/')
+  } else {
+    store.commit('setSetLoading',false)  
     oRouter.push('/logIn')
   }
+  // 데이터베이스 초기 정보 로드 //
+  store.dispatch('dataLoad');
+});
+// 이후 로그인/로그아웃 체크 //
+onAuthStateChanged(useAuth ,user => {
+  if(user) {
+    store.commit('setSetLoading', true);
+    get(dataRef(useDatabase,'account/' + user.uid))
+    .then(data => store.commit('loginAccount', data.val()))
+    .then(() => {
+      oRouter.push('/')
+      store.commit('setSetLoading', false);
+    })
+  } else {
+    store.commit('setSetLoading', true);
+    oRouter.push('/logIn')
+    store.commit('setSetLoading', false);
+  }
 })
-
-
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
   const menu = document.querySelector(".nav_a_menu");
@@ -96,9 +118,12 @@ const slideAccount = function(){
   }
 }
 
+// account menu 이동 //
 const goAccount = function(){
-  oRouter.push({ name: 'account', params : { ids : 'my', userInfo: useAuth.currentUser }})
+  oRouter.push({ name: 'account', params : { ids : 'my', userInfo: useAuth.currentUser.uid }})
 }
+
+
 </script>
 
 <style>
@@ -126,6 +151,10 @@ ul,li {
 }
 button {
   cursor: pointer;
+}
+p {
+  padding: 0;
+  margin: 0;
 }
 #app {
   width: 100%;
@@ -194,9 +223,6 @@ label.label_value {
 
 }
 .nav_a_menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
   width: 100%;
   overflow: hidden;
   box-sizing: border-box;
@@ -204,6 +230,8 @@ label.label_value {
   align-items: end;
   height: 0px;
   transition: .4s ease;
+
+  background-color: white;
 }
 .nav_a_menuWrap {
   width: 100%;

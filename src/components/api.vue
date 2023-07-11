@@ -38,6 +38,11 @@
                 </div>
                 <div class="ml_menu">
                     <button type="button" class="ml_m_add">플레이리스트에 추가</button>
+                    <div class="ml_m_mylist">
+                        <ul>
+                            <li>+ 새 플레이리스트 만들기</li>
+                        </ul>
+                    </div>
                     <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
                 </div>
             </li>
@@ -49,7 +54,7 @@
 import axios from 'axios';
 import {ref as dataRef, get, child} from 'firebase/database';
 import {useDatabase} from '../datasources/firebase.js'
-import { onMounted, ref, reactive, onUpdated, watchEffect } from 'vue';
+import { onMounted, ref, reactive, watch } from 'vue';
 import store from '../store/store';
 // common ------------------------------------------------------------------
 const inputFocus = () => {
@@ -129,8 +134,12 @@ async function getId(){
     })
     
 }
-watchEffect(function(){
-   console.log(cover)
+watch(videos, function(cur,past){
+    document.querySelectorAll(".musicList").forEach((v,i) => {
+        v.querySelector(".ml_m_add").addEventListener('click',function(){
+
+        })
+    })
 })
 // ---------------------------------------------------------------------------
 
@@ -304,6 +313,13 @@ watchEffect(function(){
     border-radius: 1em;
     color: white;
 }
+.ml_m_mylist {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+
+}
+/* -------------------------------------------------------------------- */
 .searchBox {
     position: relative;
     display: flex;

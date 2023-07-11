@@ -80,23 +80,7 @@ const clickLogin = function(e){
         return;
     }else {
         // 로그인 에러 확인 및 완료 --> 사용자 정보 저장 후 메인 페이지로 이동
-        signInWithEmailAndPassword(useAuth, dataobj.user_id , dataobj.user_pwd)
-        .then(usercredential => {
-            const user = usercredential.user;
-            store.commit('loginAccount',{
-                id: user.uid,
-                name: user.displayName,
-                email: user.email,
-                token: user.getIdToken,
-                photoURL: user.photoURL
-            });
-            router.push('/')
-        })
-        .catch(err => {
-            const code = err.code;
-            const message = err.message;
-            console.log("[Login Error]" + code + " => " + message);
-        })
+        store.dispatch('loginWithEmail',dataobj);
     }
 }
 

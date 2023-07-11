@@ -77,6 +77,8 @@ let userInfo = reactive({});
 let btnDbl = ref(false)
 let pwdInfo_text = ref('');
 let signinPage = ref(1)
+
+// 비밀번호 - 비밀번호 확인 일치 검사 //
 const correct_pwd = function(e){
     const n = e.target.value;
     pwdInfo_text.value = n == userInfo.pwd? "비밀번호가 일치합니다." : "다시 확인해주세요."
@@ -85,38 +87,30 @@ const correct_pwd = function(e){
 
 let signCheck = ref(1)
 
+// 이메일, 비밀번호 입력 후 정보 기입 이동 //
 const sign_1 = () => {
     
     if (!signin_email.value) {
         signin_email.classList.add('required')
         signin_email.parentElement.classList.add('required')
-        // inputwrwap_email.classList.add('required')
     } else if(!signin_pwd) {
         signin_pwd.classList.add('required')
         signin_pwd.parentElement.classList.add('required')
-        // inputwrap_pwd.classList.add('required')
     } else if(!signin_pwdconfirm) {
         signin_pwdconfirm.classList.add('required')
         signin_pwdconfirm.parentElement.classList.add('required')
-        // inputwrwap_pwdconfirm.classList.add('required')
     } else if( signin_pwd.value.length <6 ) {
         signin_pwd.classList.add('requiredLength')
         signin_pwd.parentElement.classList.add('requiredLength')
-        // inputwrap_pwd.classList.add('requiredLength')
     } else if (!signin_email.value.match(/@/g)) {
         signin_email.classList.add('requiredEmail')
         signin_email.parentElement.classList.add('requiredEmail')
-        // inputwrap_email.classList.add('requiredEmail')
     }
      else {
         signinPage.value = 2;
     }
 }
 
-const createAccount = () => {
-    console.log(btnDbl)
-    
-}
 // upload avatar image -------------------------------------------------
 let clickme = ref(true);
 const openFile = () => {
@@ -156,10 +150,7 @@ const saveInfo = () => {
     if( !signin_nickname.value ) {
         alert('이름을 입력하세요')
     }else {
-        // updateProfile(me, {
-        //     displayName: userInfo.name,
-        //     photoURL: userInfo.photoURL
-        // });
+        
         // update(dataRef(useDatabase,'account/'+ me.uid),{
         //     name: userInfo.name,
         //     photoURL: userInfo.photoURL? userInfo.photoURL : "/img/img/rodent.png"
@@ -172,13 +163,17 @@ const saveInfo = () => {
                     id: user.uid,
                     email: user.email,
                     uid: user.uid,
-                    name: userInfo.Name,
+                    name: userInfo.name,
                     photoURL: userInfo.photoURL? userInfo.photoURL : "",
-                    playlist: [],
-                    follower: [],
-                    follering: []
+                    playlist: '',
+                    follower: '',
+                    follering: ''
                 };
                 update(dataRef(useDatabase,'account/'+user.uid),userData);
+                updateProfile(me, {
+                    displayName: userInfo.name,
+                    photoURL: userInfo.photoURL
+                });
                 store.commit('loginAccount',userData)
                 
             })

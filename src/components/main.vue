@@ -1,7 +1,8 @@
 <template>
     <div id="mainBox">
-      <div class="mainLoading" v-if="mainLoadingOn"></div>
+      <h2>main.vue</h2>
       <Playlist v-if="channel == 'Playlist'"/>
+      <Home v-else-if="channel == 'Home'"/>
       <Api v-else-if="channel == 'Api'"/>
       <Account v-else-if="channel == 'Account'"/>
     </div>
@@ -20,14 +21,10 @@ import { ref as dataRef, onValue } from 'firebase/database';
 import Api from './api.vue';
 import Playlist from './playlist.vue';
 import Account from './account.vue';
+import Home from './home.vue'
 
 // ------------------------------------------------------------
 let channel = ref(store.getters.page);
-
-// 첫 페이지 로드 시 로딩화면 //
-let mainLoadingOn = null;
-const dbData = dataRef(useDatabase, 'account');
-
 
 
 </script>
