@@ -62,6 +62,12 @@ import {useDatabase, useAuth} from '../datasources/firebase.js'
 import { onMounted, ref, reactive, watch } from 'vue';
 import { useStore } from 'vuex';
     const store = useStore();
+onMounted(() => {
+  const tag = document.createElement('script');
+  tag.src = "@/youtube.js"; // 로컬 파일 경로
+  const firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+});
 // common ------------------------------------------------------------------
 const inputFocus = () => {
     const q1 = document.querySelector(".focusLine");
@@ -184,6 +190,7 @@ const addToList = function(lists,key,item){
 // 
 //  https://developers.google.com/youtube/iframe_api_reference?hl=ko#Loading_a_Video_Player
 // 
+
 </script>
 
 <style scoped>

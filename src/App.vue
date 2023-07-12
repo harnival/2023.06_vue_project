@@ -1,5 +1,8 @@
 <template>
-  <div id="appBox">
+  <div class="loadingPage" v-if="store.getters.getSetLoading">
+    <h2>LOADING.........</h2>
+  </div>
+  <div id="appBox" v-else>
     <header>
       <div class="navBtn">
         <button type="button" @click="store.dispatch('logout')">(임시) logout</button>
@@ -17,13 +20,13 @@
             <div class="nav_a_menuWrap">
               <ul>
                 <li><a href="/" @click.prevent="goHome">홈</a></li>
-                <li><a href="/" @click.prevent>탐색</a></li>
+                <li><a href="/" @click.prevent="goPlaylist">탐색</a></li>
                 <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
               </ul>
               <hr/>
               <ul>
                 <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
-                <li><a href="/" @click.prevent>설정</a></li>
+                <li><a href="/" @click.prevent="goSetting">설정</a></li>
                 <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
               <hr>              
@@ -44,10 +47,8 @@
       </div>
     </header>
     <main>
-      <div class="loadingPage" v-if="store.getters.getSetLoading">
-        <h2>LOADING.........</h2>
-      </div>
-      <div class="mainWrap" v-else>
+      
+      <div class="mainWrap">
         <router-view></router-view>
       </div>
     </main>
@@ -56,7 +57,7 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onBeforeMount, defineProps} from 'vue';
+import {ref,reactive, onBeforeMount,onMounted} from 'vue';
 import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
@@ -65,48 +66,27 @@ import { useRouter, useRoute } from 'vue-router';
   const oRouter = useRouter();
 import { get, ref as dataRef, onValue} from 'firebase/database';
 
-let userInfo = reactive({});
 // -------------------------------------------------------------------------------------
-// 첫 로딩 시 로그인 유무 체크 //
-onBeforeMount(async function(){
-  let current = ref(null);
-  const q = new Promise(res => {
-    store.commit('setSetLoading',true)
-    onAuthStateChanged(useAuth, user => {
-      res(user)
-    })
-  });
-  current.value = await q;
-  if( current.value ) {
-    const load = await get(dataRef(useDatabase,'account/' + current.value.uid))
-    store.commit('loginAccount', load.val());
-    oRouter.push('/')
-    store.commit('routing', 'Home');
-    store.commit('setSetLoading',false)
-    
-  } else {
-    store.commit('setSetLoading',false)  
-    oRouter.push('/logIn')
-  }
+onBeforeMount(function(){
   // 데이터베이스 초기 정보 로드 //
   store.dispatch('dataLoad');
-});
-
-// 이후 로그인/로그아웃 체크 //
-onAuthStateChanged(useAuth ,user => {
-  store.commit('setSetLoading',true)
-  if(user) {
-    get(dataRef(useDatabase,`account/${useAuth.currentUser.uid}`))
-    .then(snapshot => {
-      const data = snapshot.val();
-      store.commit('loginAccount',data);
-      oRouter.push('/index');
-    })
-  } else {
-    store.commit('loginAccount',null);
-    oRouter.push('/logIn');
-  }
-  store.commit('setSetLoading',false)  
+  // 로그인/로그아웃 체크 //
+  onAuthStateChanged(useAuth ,user => {
+    store.commit('setSetLoading',true)
+    if(user) {
+      get(dataRef(useDatabase,`account/${useAuth.currentUser.uid}`))
+      .then(snapshot => {
+        const data = snapshot.val();
+        store.commit('loginAccount',data);
+        oRouter.push({name : 'main'});
+        store.commit('setSetLoading',false)
+      })
+    } else {
+      store.commit('loginAccount',null);
+      oRouter.push('/logIn');
+      store.commit('setSetLoading',false)
+    }
+  })
 })
 
 // account 메뉴 슬라이드 클릭 이벤트 //
@@ -123,19 +103,26 @@ const slideAccount = function(){
 
 // account menu 이동 //
 const goAccount = function(){
-  oRouter.push({ name: 'account', params : { ids : 'my', userInfo: useAuth.currentUser.uid }})
+  oRouter.push({ name: 'account', params : { ids : 'my'}})
 }
 const goHome = function(){
-  oRouter.push({name: 'main', params: {channel : 'Home'}})
+  oRouter.push({name: 'main'})
   store.commit('routing', 'Home');
 }
 const goMusic = function(){
-  oRouter.push({name: 'main', params : {channel : 'Api'}})
-  store.commit('routing', 'Api');
+  oRouter.push({name: 'main'})
+  store.commit('routing', 'Music');
 }
 const goHash = function(){
-  oRouter.push({name: 'main' , params: {channel : Hash}})
-  store.commit('routing', '');
+  oRouter.push({name: 'main'})
+  store.commit('routing', 'Hash');
+}
+const goPlaylist = function(){
+  oRouter.push({name: 'main'});
+  store.commit('routing', 'Playlist');
+};
+const goSetting = function(){
+  oRouter.push({name: 'setting'});
 }
 </script>
 
@@ -215,6 +202,43 @@ label.label_value {
   font-size: 12px;
   transform: translateX(-100%);
 }
+
+.pl_title_btn {
+  width: 1rem;
+  position: relative;
+}
+.pl_title_btn button {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  font-size: 0px;
+  background: transparent url('/img/img/dots-vertical.svg') no-repeat center/ 150%;
+}
+.sec1_title_menu {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 110%;
+
+        font-size: 80%;
+        font-weight: 500;
+        word-break: keep-all;
+        display: flex;
+        flex-direction: column;
+        background-color: rgba(0,0,0,0.3);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        border-radius: 0.5rem;
+    }
+    .sec1_title_menu a {
+        text-decoration: none;
+        color: black;
+        padding: 0.2em 1.5em;
+    }
+    .sec1_title_menu a:hover{
+        background-color: rgba(255,255,255,0.3);
+    }
 </style>
 
 <style scoped>
@@ -250,7 +274,7 @@ label.label_value {
 }
 .nav_a_menuWrap {
   width: 100%;
-  padding: 1rem 0px;
+  padding-bottom: 1rem;
 }
 .nav_a_menu_playlist {
   color: #ddd;
@@ -267,7 +291,8 @@ label.label_value {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0px 3rem 0px 1rem;
+  padding: 5% 3rem 5% 1rem;
+  box-sizing: border-box;
   height: 100%;
   cursor: pointer;
   transition: .3s ease;
@@ -293,9 +318,16 @@ label.label_value {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 1rem 0;
   text-decoration: none;
   color: black;
   font-size: 100%;
+  transition: .3s ease;
 }
-</style>
+.nav_a_menuWrap li a:hover {
+  background-color: #efefef;
+}
+hr {
+  margin: 0;
+}
+</style>../public/youtube-player-api

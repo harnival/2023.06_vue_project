@@ -79,14 +79,24 @@
                         </div>
                     </li>
 
-                    <li class="a_pl_list" v-for="item in Object.entries(accountInfo.playlist).reverse()" :key="item[0]" @click="openPlayer(item[0])">
+                    <li class="a_pl_list" v-for="item in Object.entries(myPlaylist).reverse()" :key="item[0]" @click="openPlayer(item[0])">
                         <div class="a_pl_listWrap">
                             <div class="a_pl_l_cover">
                                 <img :src="item[1].cover">
                             </div>
-                            <div class="a_pl_l_text">
+                            <div class="a_pl_l_title">
                                 <p>{{ item[1].title }}</p>
-                                <p>{{ item[1].totalLength }}</p>
+                                <div v-if="item.uid == useAuth.currentUser.uid" class="pl_title_btn">
+                                    <button type="button" @click="clickOpen(key)">메뉴</button>
+                                    <div class="sec1_title_menu" v-if="openMenuPop == key">
+                                        <a href="/" @click.prevent>수정</a>
+                                        <a href="/" @click.prevent>삭제</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="a_pl_l_text">
+                                <p>{{ accountInfo.name }}</p>
+                                <p>{{ item[1].totalLength? item[1].totalLength : '--' }}</p>
                             </div>
                             <div class="a_pl_l_tag">
                                 <ul>
@@ -96,24 +106,6 @@
                         </div>
                     </li> 
 
-                    <li class="a_pl_list">
-                        <div class="a_pl_listWrap">
-                            <div class="a_pl_l_cover">
-                                <img src="/img/sample_cover.jpg">
-                            </div>
-                            <div class="a_pl_l_text">
-                                <p>[playlist] 아이유 1시간 듣기</p>
-                                <p>01:00:00</p>
-                            </div>
-                            <div class="a_pl_l_tag">
-                                <ul>
-                                    <li>#비오는날</li>
-                                    <li>#아이유</li>
-                                    <li>#오후</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </li>
                 </ul>
             </div>
 
@@ -129,14 +121,12 @@ import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
     const route = useRoute();
     const router = useRouter();
-import {computed, onBeforeMount, onMounted, reactive, ref} from 'vue';
+import { onBeforeMount,  reactive, ref, watch} from 'vue';
 import { onValue, ref as dataRef, update, push, get } from 'firebase/database';
 import { useDatabase, useAuth } from '../datasources/firebase.js';
 // ----------------------------------------------------------------------
 let pageUser = ref(''); // 현재 페이지의 유저
 let accountInfo = reactive({}); // 페이지 유저 정보
-let playlistInfo = reactive(store.getters.getDataPlaylists); // 전체 플레이리스트 정보
-let userPlaylist = reactive(accountInfo.playlist) // 유저 플레이리스트
 let plState = ref(null) // 플레이리스트 존재 유무
 onBeforeMount(function(){
     if( route.params.ids == 'my' ) {
@@ -159,6 +149,24 @@ onBeforeMount(function(){
     })
 })
 
+
+const form = reactive({
+    account : route.params.ids == 'my'? store.getters.getAccount : store.getters.getDataUser[route.params.ids],
+    playlists : store.getters.getDataPlaylists
+})
+let myPlaylist = reactive({});
+watch(() => [form.account, form.playlists], (cur) => {
+    if (cur[0]) {
+        if (!cur[0]['playlist']){
+            plState.value = false
+        } else {
+            plState.value = true
+            for( const key in cur[0]['playlist']) {
+                myPlaylist[key] = cur[1][key]
+            }
+        }
+    }
+},{immediate: true, deep: true})
 //   playlist 구조 --> [
 //  {title : value},
 //  {cover : value},
@@ -235,19 +243,22 @@ const resetImg = () => {
 
 // 플레이리스트 생성 버튼 //
 const saveMakeList = function(){
-    const currentUserDataDb = dataRef(useDatabase,'account/' + useAuth.currentUser.uid + '/playlist');
-        const postkey = push(currentUserDataDb,playlistContent).key;
-    const updates = {};
-    updates['/playlists/' + postkey] = {
-        maker : useAuth.currentUser.uid,
-        contents : playlistContent
-    }
-    update(dataRef(useDatabase),updates);
+    const dbdb = dataRef(useDatabase, 'playlists');
+    const postkey2 = push(dbdb,playlistContent).key;
+    const updates2 = {};
+    updates2['account/' + useAuth.currentUser.uid + '/playlist/' + postkey2] = true
+    update(dataRef(useDatabase),updates2)
+
+    // const currentUserDataDb = dataRef(useDatabase,'account/' + useAuth.currentUser.uid + '/playlist');
+    //     const postkey = push(currentUserDataDb,playlistContent).key;
+    // const updates = {};
+    // updates['/playlists/' + postkey] = playlistContent;
+    // update(dataRef(useDatabase),updates);
     
     const tagEntry = Object.entries(playlistContent.tag);
     tagEntry.forEach(v => {
             const hashDb = dataRef(useDatabase, 'hashs/' + v[1])
-            push(hashDb,postkey)
+            push(hashDb,postkey2)
     })
     
 
@@ -404,10 +415,18 @@ const openPlayer = function(key) {
     .a_pl_l_cover img {
         width: 100%;
     }
+    .a_pl_l_text {
+        display: flex;
+        justify-content: space-between;
+    }
     .a_pl_l_text p:last-child {
         text-align: end;
         font-size: 80%;
         color: #666;
+    }
+    .a_pl_l_title {
+        display: flex;
+        justify-content: space-between;
     }
     .a_pl_l_tag ul {
         display: flex;

@@ -29,6 +29,7 @@ const store = createStore({
     },
     // 로딩 지연 //
     setSetLoading(state,payload){
+      console.log('[loading]',payload)
       state.setLoading = payload
     },
     // database load //
@@ -76,15 +77,12 @@ const store = createStore({
       commit('setSetLoading',true);
       signInWithEmailAndPassword(useAuth, payload.user_id , payload.user_pwd)
       .then(usercredential => {
-        const user = usercredential.user;
-        commit('loginAccount',{
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL
-        });
+        const uid = usercredential.user.uid;
+        get(ref(useDatabase, `account/${uid}`))
+        .then(snapshot => {
+          const data = snapshot.val();
+        })
         commit('setSetLoading', false);
-        router.push('/')
       })
       .catch(err => {
         const code = err.code;
@@ -97,7 +95,7 @@ const store = createStore({
       signOut(useAuth)
       .then(()=> {
         commit('loginAccount',null);
-        console.log("logout")
+        console.log("[Auth] logout")
       })
       .catch(err => console.log(err.message));
     },
@@ -134,7 +132,6 @@ const store = createStore({
         commit('setDataHashs',data);
         console.log('[hashs data]', data)
       })      
-      
     }
   }
 })

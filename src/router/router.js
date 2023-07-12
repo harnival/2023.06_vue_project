@@ -11,7 +11,7 @@ const routes = [
     component: () => import('../components/login.vue'),
   },{
     name: 'main',
-    path: '/index',
+    path: '/',
     component: () => import('../components/main.vue')
   },{
     name: 'account',
@@ -21,6 +21,10 @@ const routes = [
     name: 'player',
     path: '/player/:listkey',
     component: () => import('../components/player.vue')
+  },{
+    name: 'setting',
+    path: '/setting',
+    component: () => import('../components/settings.vue')
   }
 ];
 
