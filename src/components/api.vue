@@ -4,16 +4,18 @@
             <div class="sb_inputWrap">
                 <input type="text" v-model="searchs" placeholder="제목 또는 아티스트 명을 입력하세요." @focusin="inputFocus" @focusout="inputFocusOut">
                 <div class="focusLine"></div>
-                <button class="sb_btn" @click="getId">api</button>
+                <button class="sb_btn" @click="getId">검색</button>
             </div>
         </div>
         <button @click="console.log(store.getters.getNowSearchMusic)">videos</button>
+        <button @click="qqqqq">popular</button>
         <ul>
             <li class="musicList" v-for="item in videos" :key="item.id">
+                <div :id="'player_'+item.id"></div>
                 <div class="ml_img_wrap">
                     <div class="ml_img">
                         <img class="ml_i_album" :src="item.thumbnail" alt="">
-                        <div class="ml_i_cover" data-play="play">
+                        <div class="ml_i_cover" data-play="play" @click="(e) => clickPlayButton(e,item.id)">
                             <img class="ml_i_play"  src="/img/img/play.svg" alt="play" >
                             <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" >
                             <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay">
@@ -37,10 +39,13 @@
                     </div>
                 </div>
                 <div class="ml_menu">
-                    <button type="button" class="ml_m_add">플레이리스트에 추가</button>
-                    <div class="ml_m_mylist">
+                    <button type="button" class="ml_m_add listup" @click="(e) => clickAdd(e,item.id)">플레이리스트에 추가</button>
+                    <div class="ml_m_mylist" v-if="openAddPop == item.id">
                         <ul>
                             <li>+ 새 플레이리스트 만들기</li>
+                            <li v-for="lists in userPlaylist" >
+                                <a href="/" @click.prevent="addToList(lists[1],lists[2],item)">{{ lists[1].title }}</a>
+                            </li>
                         </ul>
                     </div>
                     <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
@@ -52,10 +57,11 @@
 
 <script setup>
 import axios from 'axios';
-import {ref as dataRef, get, child} from 'firebase/database';
-import {useDatabase} from '../datasources/firebase.js'
+import {ref as dataRef, get, child, update} from 'firebase/database';
+import {useDatabase, useAuth} from '../datasources/firebase.js'
 import { onMounted, ref, reactive, watch } from 'vue';
-import store from '../store/store';
+import { useStore } from 'vuex';
+    const store = useStore();
 // common ------------------------------------------------------------------
 const inputFocus = () => {
     const q1 = document.querySelector(".focusLine");
@@ -74,24 +80,46 @@ let APIkey = ref('');
 async function getKey(){
   const q = await get(child(dataRef(useDatabase), 'API_key'));
   if( q.exists()){
-    console.log(q.val());
     APIkey = q.val();
+    return q.val();
   } else {
     const r = console.log('not has API key.') 
   }
 }
-onMounted(function(){
-    getKey();
-})
 //----------------------------------------------------------------
 
 let videos = ref([]);
 let cover = reactive(document.querySelectorAll(".ml_i_cover"))
-onMounted(function(){
-    videos.value = store.getters.getNowSearchMusic;
+let userPlaylist = ref([]);
+onMounted(async function(){
+    const APIs = await getKey();
+    // 첫 로딩 시 인기 음악 정렬 //
+    const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
+        params: {
+            part: 'snippet, contentDetails',
+            type: 'video',
+            key: APIs,
+            chart: 'mostPopular',
+            regionCode : 'kr',
+            videoCategoryId: '10',
+            videoSyndicated: 'true',
+            maxResults: 10
+        }
+    });
+    const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
+    console.log(dataArr2)
+    const dataArr = await dataArr2.map(item => ({
+            id: item.id,
+            title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
+            artist: (item.snippet.channelTitle).split(' - Topic')[0],
+            thumbnail: item.snippet.thumbnails.high.url,
+            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            duration: item.contentDetails.duration.match(/[0-9]+/g)
+        }));
+    videos.value = await dataArr
 })
 let searchs = ref('attention');
-
+// 검색 제출 시 내용 도출 //
 async function getId(){
     const res = await axios.get("https://www.googleapis.com/youtube/v3/search",{
         params: {
@@ -134,16 +162,28 @@ async function getId(){
     })
     
 }
-watch(videos, function(cur,past){
-    document.querySelectorAll(".musicList").forEach((v,i) => {
-        v.querySelector(".ml_m_add").addEventListener('click',function(){
-
-        })
-    })
-})
 // ---------------------------------------------------------------------------
-
-
+// 클릭 이벤트 //
+    // 1. 플레이리스트 선택 창 열기
+let openAddPop = ref('');
+const clickAdd = function(event,key){
+    console.log(key)
+    userPlaylist.value = Object.entries(store.getters.getAccount.playlist).reverse();
+    openAddPop.value = openAddPop.value == key? null : key;
+    console.log('[userPlaylist api]',userPlaylist.value)
+}
+    // 2. 플레이리스트 선택
+const addToList = function(lists,key,item){
+    const updateToMine = {};
+        updateToMine[`account/${useAuth.currentUser.uid}/playlist/${key}/tracks/${item.id}`] = item;
+        updateToMine[`playlists/${key}/contents/tracks/${item.id}`] = item;
+    update(dataRef(useDatabase),updateToMine);
+    openAddPop.value = openAddPop.value == key? null : key;
+}
+    //3. 음악 재생 버튼
+// 
+//  https://developers.google.com/youtube/iframe_api_reference?hl=ko#Loading_a_Video_Player
+// 
 </script>
 
 <style scoped>
@@ -261,6 +301,9 @@ watch(videos, function(cur,past){
     padding: 0px;
     margin: 0px;
 }
+.ml_menu {
+    position: relative;
+}
 .ml_menu button{
     width: 2rem;
     height: 2rem;
@@ -276,7 +319,7 @@ watch(videos, function(cur,past){
     display: flex;
     align-items: center;
 }
-.ml_m_add:hover:before {
+.ml_m_add.listup:hover:before {
     content: '내 플레이리스트에 추가';
     display: flex;
     align-items: center;
@@ -314,10 +357,22 @@ watch(videos, function(cur,past){
     color: white;
 }
 .ml_m_mylist {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-
+    position: absolute;
+    top: 0;
+    right: 120%;
+    width: 20rem;
+    background-color: rgba(0,0,0,0.2);
+    box-shadow: 1px 2px 5px 0px #666;
+    backdrop-filter: blur(10px);
+}
+.ml_m_mylist li a {
+    display: block;
+    text-decoration: none;
+    color: black;
+    background: url('/img/img/plus.png') no-repeat center left 1rem/ contain;
+}
+.ml_m_mylist li a:hover {
+    background-color: rgba(255,255,255,0.5);
 }
 /* -------------------------------------------------------------------- */
 .searchBox {

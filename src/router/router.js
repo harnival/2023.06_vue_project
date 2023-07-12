@@ -1,5 +1,4 @@
 import { createWebHistory, createRouter } from "vue-router";
-import { useAuth } from "../datasources/firebase";
 const routes = [
   {
     name: "signIn",
@@ -12,9 +11,8 @@ const routes = [
     component: () => import('../components/login.vue'),
   },{
     name: 'main',
-    path: '/',
-    component: () => import('../components/main.vue'),
-    meta: {authUser: true}
+    path: '/index',
+    component: () => import('../components/main.vue')
   },{
     name: 'account',
     path: '/account/:ids',

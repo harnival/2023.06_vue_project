@@ -73,11 +73,9 @@ const clickLogin = function(e){
     if ( !dataobj.user_id || !dataobj.user_id.match(/@/) ) {
         inputwrap_id.classList.add("requireInput");
         user_id.classList.add("requireInput");
-        return;
     } else if ( !dataobj.user_pwd ) {
         inputwrap_pwd.classList.add("requireInput");
         user_pwd.classList.add("requireInput");
-        return;
     }else {
         // 로그인 에러 확인 및 완료 --> 사용자 정보 저장 후 메인 페이지로 이동
         store.dispatch('loginWithEmail',dataobj);

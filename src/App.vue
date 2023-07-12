@@ -3,7 +3,6 @@
     <header>
       <div class="navBtn">
         <button type="button" @click="store.dispatch('logout')">(임시) logout</button>
-        <button type="button" @click="store.commit('routing','Api')">(임시) api.vue</button>
         <button type="button" @click="console.log(store.getters.getAccount, useAuth.currentUser)">[임시]loginState</button>
       </div>
       <div class="accounts">
@@ -17,9 +16,9 @@
           <div class="nav_a_menu">
             <div class="nav_a_menuWrap">
               <ul>
-                <li><a href="/" @click.prevent>홈</a></li>
+                <li><a href="/" @click.prevent="goHome">홈</a></li>
                 <li><a href="/" @click.prevent>탐색</a></li>
-                <li><a href="/" @click.prevent>음악 검색</a></li>
+                <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
               </ul>
               <hr/>
               <ul>
@@ -57,7 +56,7 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onBeforeMount} from 'vue';
+import {ref,reactive, onBeforeMount, defineProps} from 'vue';
 import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
@@ -81,8 +80,10 @@ onBeforeMount(async function(){
   if( current.value ) {
     const load = await get(dataRef(useDatabase,'account/' + current.value.uid))
     store.commit('loginAccount', load.val());
-    store.commit('setSetLoading',false)
     oRouter.push('/')
+    store.commit('routing', 'Home');
+    store.commit('setSetLoading',false)
+    
   } else {
     store.commit('setSetLoading',false)  
     oRouter.push('/logIn')
@@ -90,22 +91,24 @@ onBeforeMount(async function(){
   // 데이터베이스 초기 정보 로드 //
   store.dispatch('dataLoad');
 });
+
 // 이후 로그인/로그아웃 체크 //
 onAuthStateChanged(useAuth ,user => {
+  store.commit('setSetLoading',true)
   if(user) {
-    store.commit('setSetLoading', true);
-    get(dataRef(useDatabase,'account/' + user.uid))
-    .then(data => store.commit('loginAccount', data.val()))
-    .then(() => {
-      oRouter.push('/')
-      store.commit('setSetLoading', false);
+    get(dataRef(useDatabase,`account/${useAuth.currentUser.uid}`))
+    .then(snapshot => {
+      const data = snapshot.val();
+      store.commit('loginAccount',data);
+      oRouter.push('/index');
     })
   } else {
-    store.commit('setSetLoading', true);
-    oRouter.push('/logIn')
-    store.commit('setSetLoading', false);
+    store.commit('loginAccount',null);
+    oRouter.push('/logIn');
   }
+  store.commit('setSetLoading',false)  
 })
+
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
   const menu = document.querySelector(".nav_a_menu");
@@ -122,8 +125,18 @@ const slideAccount = function(){
 const goAccount = function(){
   oRouter.push({ name: 'account', params : { ids : 'my', userInfo: useAuth.currentUser.uid }})
 }
-
-
+const goHome = function(){
+  oRouter.push({name: 'main', params: {channel : 'Home'}})
+  store.commit('routing', 'Home');
+}
+const goMusic = function(){
+  oRouter.push({name: 'main', params : {channel : 'Api'}})
+  store.commit('routing', 'Api');
+}
+const goHash = function(){
+  oRouter.push({name: 'main' , params: {channel : Hash}})
+  store.commit('routing', '');
+}
 </script>
 
 <style>
@@ -134,7 +147,6 @@ const goAccount = function(){
 body {
   margin: 0;
   padding: 0;
-  min-width: 320px;
 }
 header {
   position: fixed;
@@ -203,16 +215,19 @@ label.label_value {
   font-size: 12px;
   transform: translateX(-100%);
 }
-/* --------------------------------------------- */
-/* --------------------------------------------- */
+</style>
+
+<style scoped>
 .nav_account {
   position: absolute;
   right: 0;
   top: 0;
-  height: max(5vh, 4rem);
+  min-height: max(5vh, 4rem);
+  border: 1px solid black;
+
 }
 .nav_a_avatar {
-  height: 100%;
+  height: 10vh;
   aspect-ratio: 1/1;
   border: 1px solid #666;
   border-radius: 50%;
@@ -243,9 +258,6 @@ label.label_value {
   padding: 0px;
   text-align: center;
 }
-</style>
-
-<style scoped>
 .navBtn {
   height: 100vh;
   width: max-content;
@@ -257,7 +269,6 @@ label.label_value {
   gap: 1rem;
   padding: 0px 3rem 0px 1rem;
   height: 100%;
-  border: 1px solid black;
   cursor: pointer;
   transition: .3s ease;
 }
@@ -278,5 +289,13 @@ label.label_value {
   top: 0;
   padding-left: 5px;
 }
-
+.nav_a_menuWrap li a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0;
+  text-decoration: none;
+  color: black;
+  font-size: 100%;
+}
 </style>

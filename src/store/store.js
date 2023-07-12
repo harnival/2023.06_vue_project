@@ -2,7 +2,6 @@ import { createStore } from 'vuex'
 import {useAuth, useDatabase} from '../datasources/firebase.js'
 import {signInWithEmailAndPassword, signOut, onAuthStateChanged} from 'firebase/auth';
 import { get, ref, onValue } from 'firebase/database';
-import router from '../router/router.js'
 // Create a new store instance.
 const store = createStore({
   state () {
@@ -14,7 +13,8 @@ const store = createStore({
       setLoading: false,
       // database data //
       dataUsers : {},
-      dataPlaylists : {}
+      dataPlaylists : {},
+      dataHashs : {}
     }
   },
   mutations: {
@@ -37,6 +37,9 @@ const store = createStore({
     },
     setDataPlaylists(state,payload){
       state.dataPlaylists = payload
+    },
+    setDataHashs(state,payload){
+      state.dataHashs = payload
     }
     
   },
@@ -56,11 +59,15 @@ const store = createStore({
     getSetLoading(state){
       return state.setLoading
     },
+    // database load //
     getDataUsers(state){
       return state.dataUsers
     },
     getDataPlaylists(state){
       return state.dataPlaylists
+    },
+    getDataHashs(state){
+      return state.dataHashs
     }
     
   },
@@ -122,6 +129,12 @@ const store = createStore({
         commit(`setDataPlaylists`,data);
         console.log('[playlist data]', data)
       })
+      onValue(ref(useDatabase,'hashs'), (snapshot) => {
+        const data = snapshot.val()
+        commit('setDataHashs',data);
+        console.log('[hashs data]', data)
+      })      
+      
     }
   }
 })

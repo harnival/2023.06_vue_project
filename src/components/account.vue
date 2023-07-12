@@ -79,7 +79,7 @@
                         </div>
                     </li>
 
-                    <li class="a_pl_list" v-for="(item) in Object.entries(userPlaylist).reverse()" :key="item[0]" @click="openPlayer(item[0])">
+                    <li class="a_pl_list" v-for="item in Object.entries(accountInfo.playlist).reverse()" :key="item[0]" @click="openPlayer(item[0])">
                         <div class="a_pl_listWrap">
                             <div class="a_pl_l_cover">
                                 <img :src="item[1].cover">
@@ -133,36 +133,31 @@ import {computed, onBeforeMount, onMounted, reactive, ref} from 'vue';
 import { onValue, ref as dataRef, update, push, get } from 'firebase/database';
 import { useDatabase, useAuth } from '../datasources/firebase.js';
 // ----------------------------------------------------------------------
-let pageUser = ref('');
-
-let accountInfo = reactive(store.getters.getAccount);
-let playlistInfo = reactive(store.getters.getDataPlaylists);
-let userPlaylist = reactive(accountInfo.playlist)
-let plState = ref(userPlaylist? true : false) // 플레이리스트 존재 유무
+let pageUser = ref(''); // 현재 페이지의 유저
+let accountInfo = reactive({}); // 페이지 유저 정보
+let playlistInfo = reactive(store.getters.getDataPlaylists); // 전체 플레이리스트 정보
+let userPlaylist = reactive(accountInfo.playlist) // 유저 플레이리스트
+let plState = ref(null) // 플레이리스트 존재 유무
 onBeforeMount(function(){
-    if( route.params.ids == 'my') {
-        onValue(dataRef(useDatabase,`account/${useAuth.currentUser.uid}`), snapshot => {
-            const data = snapshot.val()
-            accountInfo = data;
-
-        })
+    if( route.params.ids == 'my' ) {
+        pageUser.value = useAuth.currentUser.uid;
     } else {
-        onValue(dataRef(useDatabase,`account/${route.params.ids}`), snapshot => {
-            const data = snapshot.val();
-            accountInfo = data;
-        })
+        pageUser.value = route.params.ids;
     }
-    onValue(dataRef(useDatabase,'playlists'), snapshot => {
+    onValue(dataRef(useDatabase,'account/' + pageUser.value), function(snapshot){
         const data = snapshot.val();
+        accountInfo = {
+            photoURL : data.photoURL,
+            name: data.name,
+            id : data.id,
+            uid : data.uid,
+            follower : data.follower? data.follower : null,
+            following : data.following? data.following : null,
+            playlist : data.playlist
+        }
+        plState.value = accountInfo.playlist? true : false;
     })
 })
-
-// account 페이지 --> 내 정보 or 다른 계정 정보 ==============================================================
-if( route.params.ids == 'my' ) {
-    console.log("[account.vue] 내 계정으로 로드", userPlaylist)
-} else {
-    console.log("[account.vue] 다른 계정으로 로드", accountInfo.value)
-}
 
 //   playlist 구조 --> [
 //  {title : value},
@@ -242,13 +237,20 @@ const resetImg = () => {
 const saveMakeList = function(){
     const currentUserDataDb = dataRef(useDatabase,'account/' + useAuth.currentUser.uid + '/playlist');
         const postkey = push(currentUserDataDb,playlistContent).key;
-        const updates = {};
-        updates['/playlists/' + postkey] = {
-            maker : useAuth.currentUser.uid,
-            contents : playlistContent
-        }
-        update(dataRef(useDatabase),updates);
+    const updates = {};
+    updates['/playlists/' + postkey] = {
+        maker : useAuth.currentUser.uid,
+        contents : playlistContent
+    }
+    update(dataRef(useDatabase),updates);
     
+    const tagEntry = Object.entries(playlistContent.tag);
+    tagEntry.forEach(v => {
+            const hashDb = dataRef(useDatabase, 'hashs/' + v[1])
+            push(hashDb,postkey)
+    })
+    
+
     makeListPage.value = false;
 }
 // player 이동---------------------------------------------------------------
