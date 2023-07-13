@@ -25,7 +25,7 @@
                                 </div>
                                 <div class="sec1_list_text">
                                     <p class="sec1_l_t_title">
-                                        <p>{{ item.title }}</p>
+                                        <p class="sec1_l_t_t_wrap">{{ item.title }}</p>
                                         <div v-if="item.uid == useAuth.currentUser.uid" class="pl_title_btn">
                                             <button type="button" @click="clickOpen(key)">메뉴</button>
                                             <div class="sec1_title_menu" v-if="openMenuPop == key">
@@ -36,7 +36,7 @@
                                     </p>
                                     <p class="sec1_l_t_sub">
                                         <span>총 {{item.tracks? Object.entries(item.tracks).length : 0 }}곡</span>
-                                        <span>{{ item.totalLength }}</span>
+                                        <span>{{ item.totalLength? item.totalLength : 0  }}</span>
                                     </p>
                                     <p class="sec1_l_t_tag">
                                         <ul>
@@ -52,31 +52,39 @@
         </div>
 
         <div class="section">
-            <div class="sec2_title">
-                <h3>인기 해시</h3>
-                <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
+            <div class="sec1_title">
+                <h3># 인기 해시</h3>
             </div>
             <div class="sectionWrap" v-for="(item,key) in popularHashList">
                 <div class="hash_title">
-                    #{{ key }}
+                    <p># {{ key }}</p>
+                    <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
                 </div>
                 <div class="slideBox">
                     <div class="slideBtnBox">
-                        <button type="button" class="leftArrow"></button>
-                        <button type="button" class="rightArrow"></button>
+                        <button type="button" class="leftArrow" @click="leftBtn"></button>
+                        <button type="button" class="rightArrow" @click="rightBtn"></button>
                     </div>
-                    <div class="sec2_list_wrap">
+                    <div class="sec1_list_wrap">
                         <ul>
                             <li class="sec1_list" v-for="items in item" :key="key">
                                 <div class="sec1_list_image">
                                     <img :src="store.getters.getDataPlaylists[items].cover">
                                     <button type="button" @click.prevent>플레이리스트 재생</button>
+                                    <div class="sec_list_maker" @click="goToMakerAccount(items)">
+                                        <div class="sec_l_m_image">
+                                            <img :src=" store.getters.getDataUsers[store.getters.getDataPlaylists[items].uid].photoURL">
+                                        </div>
+                                        <div class="sec_l_m_name">{{ store.getters.getDataUsers[store.getters.getDataPlaylists[items].uid].name }}</div>
+                                    </div>
                                 </div>
                                 <div class="sec1_list_text">
-                                    <p class="sec1_l_t_title">{{ store.getters.getDataPlaylists[items].title }}</p>
+                                    <p class="sec1_l_t_title">
+                                        <p class="sec1_l_t_t_wrap">{{ store.getters.getDataPlaylists[items].title }}</p>
+                                    </p>
                                     <p class="sec1_l_t_sub">
                                         <span>총 {{store.getters.getDataPlaylists[items].tracks? Object.entries(store.getters.getDataPlaylists[items].tracks).length : 0 }}곡</span>
-                                        <span>{{ store.getters.getDataPlaylists[items].totalLength }}</span>
+                                        <span>{{ store.getters.getDataPlaylists[items].totalLength? store.getters.getDataPlaylists[items].totalLength : 0 }}</span>
                                     </p>
                                     <p class="sec1_l_t_tag">
                                         <ul>
@@ -90,12 +98,17 @@
                 </div>
             </div>
         </div>
-        <div class="section"></div>
+        <div class="section">
+            <div class="sec1_title">
+                <h3>팔로워</h3>
+                <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref ,reactive, watch} from 'vue';
+import { ref ,reactive, watch, computed} from 'vue';
 import { useDatabase , useAuth} from '../datasources/firebase';
 import { ref as dataRef, get } from 'firebase/database';
 import { useStore } from 'vuex';
@@ -142,13 +155,56 @@ watch(() => store.getters.getDataHashs, (cur) => {
         const key = val.shift()
         popularHashList[key] = val
     })
-    console.log(popularHashList)
 },{immediate: true, deep : true})
+
 
 // 클릭 이벤트 //
 let openMenuPop = ref('');
 const clickOpen = function(k){
     openMenuPop.value = openMenuPop.value == k? null : k
+}
+
+// 작성자 정보 보러 가기 //
+const goToMakerAccount = function(items){
+    const uid = store.getters.getDataPlaylists[items].uid;
+    router.push({name : 'account', params : { ids : uid}})
+}
+// 플리카드 hover 시 이벤트 //
+const hoverTitle = function(e){
+    const title = e.target.querySelector(".sec1_l_t_t_wrap");
+    
+}
+
+// 슬라이드 이벤트 //
+const leftBtn = function(e){
+    
+    const slideBox = e.target.parentNode.parentNode;
+    const slide = slideBox.querySelector(".sec1_list_wrap")
+    const boxWidth = slide.clientWidth;
+    const slideBody = slideBox.querySelector(".sec1_list_wrap > ul")
+    const bodyLeft = slideBody.offsetLeft;
+    const bodyWidth = slideBody.offsetWidth;
+    const slideUnitLength = slideBody.querySelectorAll(".sec1_list").length;
+    let move = bodyWidth / slideUnitLength;
+    if( Math.sqrt(bodyLeft*bodyLeft) < move ) {
+        slideBody.style.left = `0px`
+    }
+    else if( bodyWidth > boxWidth + slideUnitLength ) {
+        slideBody.style.left = `${bodyLeft - move}px`
+    }
+}
+const rightBtn = function(e){
+    const slideBox = e.target.parentNode.parentNode;
+    const slide = slideBox.querySelector(".sec1_list_wrap")
+    const boxWidth = slide.clientWidth;
+    const slideBody = slideBox.querySelector(".sec1_list_wrap > ul")
+    const bodyLeft = slideBody.offsetLeft;
+    const bodyWidth = slideBody.offsetWidth;
+    const slideUnitLength = slideBody.querySelectorAll(".sec1_list").length;
+    let move = bodyWidth / slideUnitLength;
+    if( bodyLeft < 0) {
+        slideBody.style.left = `${bodyLeft + move}px`
+    }
 }
 </script>
 
@@ -158,6 +214,7 @@ const clickOpen = function(k){
     margin: 0 auto;
 }
 .leftArrow {
+    transition: .3s ease;
     position: absolute;
     top: 50%;
     left: -4rem;
@@ -168,6 +225,7 @@ const clickOpen = function(k){
     background: transparent url('/img/img/arrow-left-circle.svg') no-repeat center/contain;
 }
 .rightArrow {
+    transition: .3s ease;
     position: absolute;
     top: 50%;
     right: -4rem;
@@ -177,10 +235,19 @@ const clickOpen = function(k){
     aspect-ratio: 1/1;
     background: transparent url('/img/img/arrow-right-circle.svg') no-repeat center/contain;
 }
+.leftArrow:hover,
+.rightArrow:hover {
+    opacity: 0.8;
+}
     .sec1_title {
         display: flex;
         justify-content: space-between;
         align-items: center;
+    }
+    .sec1_title h3 {
+        font-family: 'Orbit';
+        font-size: 200%;
+        font-weight: 400;
     }
     .sec_title_btn {
         text-decoration: none;
@@ -195,10 +262,46 @@ const clickOpen = function(k){
         opacity: 0.7;
         filter: hue-rotate(90deg);
     }
+    .sec_list_maker {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        height: 15%;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 2rem;
+        cursor: pointer;
+        
+    }
+    .sec_list_maker:hover {
+        background-color: rgba(255,255,255,0.7);
+        backdrop-filter: blur(5px);
+    }
+    .sec_l_m_name {
+        font-size: 100%;
+        padding-right: 0.5rem;
+    }
+
+    .sec_l_m_image {
+        border: 1px solid black;
+        border-radius: 50%;
+        height: 100%;
+        aspect-ratio: 1/1;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: white;
+    }
+    .sec_l_m_image img {
+        width: 100%;
+    }
+/* ---------------------------------------------- */
     .sec1_list_wrap,
     .sec2_list_wrap {
-        border: 1px solid blue;
         position: relative;
+        overflow-x: hidden;
     }
     .sec1_list_wrap > ul,
     .sec2_list_wrap > ul {
@@ -225,6 +328,7 @@ const clickOpen = function(k){
         align-items: center;
         position: relative;
         background-color: rgba(0,0,0,0.9);
+        margin-bottom: 1rem;
     }
     .sec1_list_image img {
         width: 100%;
@@ -243,21 +347,26 @@ const clickOpen = function(k){
 
     }
     .sec1_l_t_title {
-        font-size: 120%;
-        font-weight: 600;
+        
         margin-bottom: 1rem;
         padding-right: 0.5rem;
         display: flex;
         justify-content: space-between;
+        overflow-x: hidden;
     }
-    
+    .sec1_l_t_t_wrap {
+        font-size: 120%;
+        font-weight: 600;
+        word-break: keep-all;
+        white-space: nowrap;
+    }
     
     .sec1_l_t_sub {
         font-size: 90%;
         color: #666;
         display: flex;
         justify-content: space-between;
-        padding: 0 1em;
+        padding: 1em 1em;
     }
     .sec1_l_t_tag ul{
         display: flex;
@@ -277,8 +386,15 @@ const clickOpen = function(k){
     }
 
     .hash_title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;        
+        padding: 2rem;
+    }
+    .hash_title p{
         font-family: 'Oswald', 'Noto Sans KR';
-        font-size: 100%;
+        font-size: 150%;
+        
     }
     .slideBox {
         position: relative;

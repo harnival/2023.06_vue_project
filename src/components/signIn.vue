@@ -39,7 +39,7 @@
                         <div class="avatar_text">
                             <ul>
                                 <li>- 프로필 사진을 등록해주세요.</li>
-                                <li>- '내 정보' 에서 수정할 수 있습니다.</li>
+                                <li>- '설정' 에서 수정할 수 있습니다.</li>
                                 <li>- 또 뭐 쓰지</li>
                                 <li>- <span class="toDefaultImg" @click="resetImg">기본 이미지 적용하기</span></li>
                             </ul>
@@ -146,7 +146,6 @@ const resetImg = () => {
 }
 // ---------------------------------------------------------------------
 const saveInfo = () => {
-    const me = useAuth.currentUser;
     if( !signin_nickname.value ) {
         alert('이름을 입력하세요')
     }else {
@@ -170,7 +169,7 @@ const saveInfo = () => {
                     follering: ''
                 };
                 update(dataRef(useDatabase,'account/'+user.uid),userData);
-                updateProfile(me, {
+                updateProfile(useAuth.currentUser, {
                     displayName: userInfo.name,
                     photoURL: userInfo.photoURL
                 });

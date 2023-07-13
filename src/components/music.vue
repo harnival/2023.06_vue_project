@@ -1,5 +1,6 @@
 <template>
     <div>
+        <div id="youtubePlayer"></div>
         <div class="searchBox">
             <div class="sb_inputWrap">
                 <input type="text" v-model="searchs" placeholder="제목 또는 아티스트 명을 입력하세요." @focusin="inputFocus" @focusout="inputFocusOut">
@@ -15,10 +16,10 @@
                 <div class="ml_img_wrap">
                     <div class="ml_img">
                         <img class="ml_i_album" :src="item.thumbnail" alt="">
-                        <div class="ml_i_cover" data-play="play" @click="(e) => clickPlayButton(e,item.id)">
-                            <img class="ml_i_play"  src="/img/img/play.svg" alt="play" >
-                            <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" >
-                            <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay">
+                        <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
+                            <img class="ml_i_play"  src="/img/img/play.svg" alt="play" v-if="playerState == 'pause' || videoCalled != item.id">
+                            <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" v-if="playerState == 'playing' && videoCalled == item.id">
+                            <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay" v-if="false">
                         </div>
                     </div>
                 </div>
@@ -32,7 +33,7 @@
                             <div class="bar_line"></div>
                         </div>
                         <p class="ml_p_current">00:00</p>
-                        <p class="nl_p_duration" data-time="">
+                        <p class="nl_p_duration">
                             {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
                             {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
                         </p>
@@ -56,18 +57,14 @@
 </template>
 
 <script setup>
+import Youtube from './youtube.vue'
 import axios from 'axios';
 import {ref as dataRef, get, child, update} from 'firebase/database';
 import {useDatabase, useAuth} from '../datasources/firebase.js'
-import { onMounted, ref, reactive, watch } from 'vue';
+import { onMounted, ref, reactive, watch , computed} from 'vue';
 import { useStore } from 'vuex';
     const store = useStore();
-onMounted(() => {
-  const tag = document.createElement('script');
-  tag.src = "@/youtube.js"; // 로컬 파일 경로
-  const firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-});
+var player;
 // common ------------------------------------------------------------------
 const inputFocus = () => {
     const q1 = document.querySelector(".focusLine");
@@ -97,34 +94,41 @@ async function getKey(){
 let videos = ref([]);
 let cover = reactive(document.querySelectorAll(".ml_i_cover"))
 let userPlaylist = ref([]);
-onMounted(async function(){
-    const APIs = await getKey();
-    // 첫 로딩 시 인기 음악 정렬 //
-    const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
-        params: {
-            part: 'snippet, contentDetails',
-            type: 'video',
-            key: APIs,
-            chart: 'mostPopular',
-            regionCode : 'kr',
-            videoCategoryId: '10',
-            videoSyndicated: 'true',
-            maxResults: 10
-        }
-    });
-    const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
-    console.log(dataArr2)
-    const dataArr = await dataArr2.map(item => ({
-            id: item.id,
-            title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
-            artist: (item.snippet.channelTitle).split(' - Topic')[0],
-            thumbnail: item.snippet.thumbnails.high.url,
-            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-            duration: item.contentDetails.duration.match(/[0-9]+/g)
-        }));
-    videos.value = await dataArr
+onMounted(function(){
+    // 유튜브 api 로드 //------------------------------------------------------
+   onYouTubeIframeAPIReady()
+    // ----------------------------------------------------------------------
+
+    const mo = async function(){
+        const APIs = await getKey();
+        // 첫 로딩 시 인기 음악 정렬 //
+        const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
+            params: {
+                part: 'snippet, contentDetails',
+                type: 'video',
+                key: APIs,
+                chart: 'mostPopular',
+                regionCode : 'kr',
+                videoCategoryId: '10',
+                videoSyndicated: 'true',
+                maxResults: 10
+            }
+        });
+        const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
+        console.log(dataArr2)
+        const dataArr = await dataArr2.map(item => ({
+                id: item.id,
+                title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
+                artist: (item.snippet.channelTitle).split(' - Topic')[0],
+                thumbnail: item.snippet.thumbnails.high.url,
+                url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+                duration: item.contentDetails.duration.match(/[0-9]+/g)
+            }));
+        videos.value = await dataArr
+    }
+    mo()
 })
-let searchs = ref('attention');
+let searchs = ref('');
 // 검색 제출 시 내용 도출 //
 async function getId(){
     const res = await axios.get("https://www.googleapis.com/youtube/v3/search",{
@@ -187,10 +191,62 @@ const addToList = function(lists,key,item){
     openAddPop.value = openAddPop.value == key? null : key;
 }
     //3. 음악 재생 버튼
-// 
 //  https://developers.google.com/youtube/iframe_api_reference?hl=ko#Loading_a_Video_Player
-// 
 
+let playerState = ref('pause');
+let videoCalled = ref(null);
+let readyVideo = ref(false)
+
+const clickToMusicPlay = function(currentId){
+     if( videoCalled.value != currentId){
+        const qqq = new Promise((res) => {
+            readyVideo.value = false;
+            res() })
+        qqq
+        .then(() => { player.cueVideoById({ videoId : currentId }) })
+        .then(() => { readyVideo.value = true; })
+        
+         videoCalled.value = currentId
+     }
+     if( readyVideo.value && videoCalled.value == currentId && playerState.value == 'playing'){
+        player.pauseVideo();
+        playerState.value = 'pause';
+     }
+     if( readyVideo.value && videoCalled.value == currentId && playerState.value == 'pause'){
+        player.playVideo();
+        playerState.value = 'playing'
+     }
+}
+
+
+    // 초기 영상 로드 //
+async function onYouTubeIframeAPIReady() {
+    store.commit('setSetLoading',true)
+    player = new YT.Player('youtubePlayer', {
+        height: '10',
+        width: '20',
+        videoId: '0c7zGU2C2mM',
+        events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+        }
+    })
+    store.commit('setSetLoading',false)
+}
+
+function onPlayerReady(event) {
+    event.target.playVideo();
+}
+var done = false;
+function onPlayerStateChange(event) {
+if (event.data == YT.PlayerState.PLAYING && !done) {
+    setTimeout(stopVideo, 6000);
+    done = true;
+}
+}
+function stopVideo() {
+player.stopVideo();
+}
 </script>
 
 <style scoped>
@@ -233,18 +289,16 @@ const addToList = function(lists,key,item){
     opacity: 0.4;
     transition: .5s ease;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .ml_i_cover:hover {
     background-color: rgba(255,255,255,0.5);
     opacity: 1;
 }
 .ml_i_cover img {
-    display: none;
-    /* transform-origin: center;
-    transform: scale(0.6,0.6); */
-}
-.ml_i_cover img.show {
-    display: block;
+    width: 80%;
 }
 .ml_i_album {
     display: block;
@@ -426,4 +480,4 @@ const addToList = function(lists,key,item){
     background-color: rgba(255, 136, 0,0.6);
     border-color: transparent;
 }
-</style>
+</style>../../public/youtube.js@/youtube.js

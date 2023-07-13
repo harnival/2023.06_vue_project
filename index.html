@@ -15,6 +15,13 @@
     <script type="module" src="/src/main.js"></script>
     <script src="/service-worker.js"></script>
     <script src="/sw-dev.js"></script>
+    <script>
+         const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api"; 
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        console.log("[youtube api] load")
+    </script>
 </body>
 
 </html>

@@ -1,5 +1,4 @@
 <template>
-  <h2>main</h2>
     <div id="mainBox">
       <Home v-if="channel == 'Home'"/>
       <Music v-else-if="channel == 'Music'"/>

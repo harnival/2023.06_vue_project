@@ -1,5 +1,4 @@
 <template>
-    <h2>account.vue</h2>
     <div id="accountBox">
         <div class="a_profile">
             <div class="a_p_content">
@@ -14,17 +13,21 @@
                     <div class="a_p_c_follow">
                         <div>
                             <span>팔로워</span>
-                            <span>{{ accountInfo.follower? accountInfo.follower.length : 0 }}</span>
+                            <span>{{ accountInfo.follower? Object.keys(accountInfo.follower).length : 0 }}</span>
                         </div>
                         <div v-if="route.params.ids == 'my'">
                             <span>팔로잉</span>
-                            <span>{{ accountInfo.following? accountInfo.following.length : 0 }}</span>
+                            <span>{{ accountInfo.following? Object.keys(accountInfo.following).length : 0 }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="a_p_btns" v-if="route.params.ids == 'my'">
-                <a href="/" @click.prevent>프로필 수정</a>
+            <div class="a_p_btns" >
+                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my'">프로필 수정</a>
+                <div v-if="route.params.ids != 'my'">
+                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.follower ||!accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우</a>
+                    <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.follower && accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
+                </div>
             </div>
         </div>
         <div class="a_playlist">
@@ -35,11 +38,11 @@
             <div class="a_playlistWrap">
                 <div class="a_pl_nolist" v-if="!plState">
                     <p>플레이리스트가 없습니다.</p>
-                    <button type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
+                    <button v-if="route.params.ids == 'my'" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
                 </div>
 
-                <ul v-else>
-                    <li class="a_pl_list_new">
+                <ul v-if="plState">
+                    <li class="a_pl_list_new" v-if="route.params.ids == 'my'">
                         <div class="a_pl_btns" v-if="!makeListPage">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>
@@ -79,8 +82,8 @@
                         </div>
                     </li>
 
-                    <li class="a_pl_list" v-for="item in Object.entries(myPlaylist).reverse()" :key="item[0]" @click="openPlayer(item[0])">
-                        <div class="a_pl_listWrap">
+                    <li class="a_pl_list" v-for="item in Object.entries(myPlaylist).reverse()" :key="item[0]" >
+                        <div class="a_pl_listWrap" @click="router.push({name : 'player', params : {listkey : item[0]}})">
                             <div class="a_pl_l_cover">
                                 <img :src="item[1].cover">
                             </div>
@@ -128,11 +131,11 @@ import { useDatabase, useAuth } from '../datasources/firebase.js';
 let pageUser = ref(''); // 현재 페이지의 유저
 let accountInfo = reactive({}); // 페이지 유저 정보
 let plState = ref(null) // 플레이리스트 존재 유무
-onBeforeMount(function(){
-    if( route.params.ids == 'my' ) {
+watch(() => route.params.ids, (cur) => {
+    if( cur == 'my' ) {
         pageUser.value = useAuth.currentUser.uid;
     } else {
-        pageUser.value = route.params.ids;
+        pageUser.value = cur;
     }
     onValue(dataRef(useDatabase,'account/' + pageUser.value), function(snapshot){
         const data = snapshot.val();
@@ -146,12 +149,12 @@ onBeforeMount(function(){
             playlist : data.playlist
         }
         plState.value = accountInfo.playlist? true : false;
+        console.log('[onValue account] done')
     })
-})
-
+},{immediate:true, deep: true})
 
 const form = reactive({
-    account : route.params.ids == 'my'? store.getters.getAccount : store.getters.getDataUser[route.params.ids],
+    account : route.params.ids == 'my'? store.getters.getAccount : store.getters.getDataUsers[route.params.ids],
     playlists : store.getters.getDataPlaylists
 })
 let myPlaylist = reactive({});
@@ -265,12 +268,24 @@ const saveMakeList = function(){
     makeListPage.value = false;
 }
 // player 이동---------------------------------------------------------------
-const openPlayer = function(key) {
-    const q = store.getters.getDataPlaylists;
-    console.log(q[key])
-    router.push(`/player/` + key, {params : {
-        listkey: key
-    }})
+
+// 팔로우 하기 
+const clickToFollow = function(){
+    const uid = route.params.ids;
+    const myUid = useAuth.currentUser.uid;
+    const updates = {};
+        updates[`account/${uid}/follower/${myUid}`] = true;
+        updates[`account/${myUid}/following/${uid}`] = true;
+    update(dataRef(useDatabase),updates);
+}
+// 팔취
+const clickToDeleteFollow = function(){
+    const uid = route.params.ids;
+    const myUid = useAuth.currentUser.uid;
+    const updates = {};
+        updates[`account/${uid}/follower/${myUid}`] = null;
+        updates[`account/${myUid}/following/${uid}`] = null;
+    update(dataRef(useDatabase),updates);
 }
 </script>
 

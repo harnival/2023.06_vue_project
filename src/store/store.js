@@ -132,7 +132,8 @@ const store = createStore({
         commit('setDataHashs',data);
         console.log('[hashs data]', data)
       })      
-    }
+    },
+    
   }
 })
 

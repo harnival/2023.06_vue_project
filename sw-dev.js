@@ -7,7 +7,6 @@ if("serviceWorker" in navigator) {
         })
     })
 }
-
 //2. 알림 허용 체크
 if( !("Notification" in window)) {
     alert("알림 지원 안 됨.")

@@ -4,10 +4,10 @@
   </div>
   <div id="appBox" v-else>
     <header>
-      <div class="navBtn">
+      <!-- <div class="navBtn">
         <button type="button" @click="store.dispatch('logout')">(임시) logout</button>
         <button type="button" @click="console.log(store.getters.getAccount, useAuth.currentUser)">[임시]loginState</button>
-      </div>
+      </div> -->
       <div class="accounts">
         <div class="nav_account" v-if="store.getters.loginStateCheck">
           <div class="nav_a_info" @click="slideAccount">
@@ -92,38 +92,55 @@ onBeforeMount(function(){
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
   const menu = document.querySelector(".nav_a_menu");
+  const navAccount = document.querySelector(".nav_account")
   const h = document.querySelector(".nav_a_menuWrap").offsetHeight;
   menu.classList.toggle('drawing');
+  navAccount.classList.toggle('drawing')
   if(menu.classList.contains('drawing')){
     menu.style.height = h + "px"
+    menu.style.backgroundColor = 'var(--main-color1)'
   } else {
     menu.style.height = 0 + "px"
+    menu.style.backgroundColor = 'white'
+
   }
 }
 
 // account menu 이동 //
 const goAccount = function(){
   oRouter.push({ name: 'account', params : { ids : 'my'}})
+  slideAccount()
 }
 const goHome = function(){
   oRouter.push({name: 'main'})
   store.commit('routing', 'Home');
+  slideAccount()
 }
 const goMusic = function(){
   oRouter.push({name: 'main'})
   store.commit('routing', 'Music');
+  slideAccount()
+
 }
 const goHash = function(){
   oRouter.push({name: 'main'})
   store.commit('routing', 'Hash');
+  slideAccount()
+
 }
 const goPlaylist = function(){
   oRouter.push({name: 'main'});
   store.commit('routing', 'Playlist');
+  slideAccount()
+
 };
 const goSetting = function(){
   oRouter.push({name: 'setting'});
+  slideAccount()
+
 }
+
+// 알림 설정 -------------------------------------------------------
 </script>
 
 <style>
@@ -155,6 +172,10 @@ p {
   padding: 0;
   margin: 0;
 }
+a {
+  text-decoration: none;
+  color: black;
+}
 #app {
   width: 100%;
   text-align: center;
@@ -163,8 +184,8 @@ p {
 #appBox {
   max-width: 1280px;
   margin: 0 auto;
-  border: 1px solid #aaa;
   box-sizing: border-box;
+  padding-top: 10vh;
 }
 .inputwrap {
   position: relative;
@@ -247,15 +268,19 @@ label.label_value {
   right: 0;
   top: 0;
   min-height: max(5vh, 4rem);
-  border: 1px solid black;
-
+  transition: .3s ease;
+  background-color: white;
+}
+.nav_account.drawing {
+  background-color: var(--main-color1);
 }
 .nav_a_avatar {
   height: 10vh;
   aspect-ratio: 1/1;
-  border: 1px solid #666;
+  border: 1px solid #66666679;
   border-radius: 50%;
   overflow: hidden;
+  background-color: white;
 }
 .nav_a_avatar img {
   width: 100%;
@@ -274,6 +299,7 @@ label.label_value {
 }
 .nav_a_menuWrap {
   width: 100%;
+  height: 90vh;
   padding-bottom: 1rem;
 }
 .nav_a_menu_playlist {
@@ -298,7 +324,7 @@ label.label_value {
   transition: .3s ease;
 }
 .nav_a_info:hover {
-  background-color: #efefef;
+  background-color: #b8b8b86c;
 }
 .nav_a_name{
   position: relative;
@@ -329,5 +355,8 @@ label.label_value {
 }
 hr {
   margin: 0;
+  height: 0.5px;
+  border: 0;
+  background-color: #666;
 }
 </style>../public/youtube-player-api
