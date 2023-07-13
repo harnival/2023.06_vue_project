@@ -15,7 +15,7 @@
                             <span>팔로워</span>
                             <span>{{ accountInfo.follower? Object.keys(accountInfo.follower).length : 0 }}</span>
                         </div>
-                        <div v-if="route.params.ids == 'my'">
+                        <div v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">
                             <span>팔로잉</span>
                             <span>{{ accountInfo.following? Object.keys(accountInfo.following).length : 0 }}</span>
                         </div>
@@ -23,8 +23,8 @@
                 </div>
             </div>
             <div class="a_p_btns" >
-                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my'">프로필 수정</a>
-                <div v-if="route.params.ids != 'my'">
+                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">프로필 수정</a>
+                <div v-if="route.params.ids != 'my' && route.params.ids != useAuth.currentUser.uid">
                     <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.follower ||!accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우</a>
                     <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.follower && accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
                 </div>
@@ -38,11 +38,11 @@
             <div class="a_playlistWrap">
                 <div class="a_pl_nolist" v-if="!plState">
                     <p>플레이리스트가 없습니다.</p>
-                    <button v-if="route.params.ids == 'my'" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
+                    <button v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
                 </div>
 
                 <ul v-if="plState">
-                    <li class="a_pl_list_new" v-if="route.params.ids == 'my'">
+                    <li class="a_pl_list_new" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">
                         <div class="a_pl_btns" v-if="!makeListPage">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>

@@ -8,8 +8,6 @@
                 <button class="sb_btn" @click="getId">검색</button>
             </div>
         </div>
-        <button @click="console.log(store.getters.getNowSearchMusic)">videos</button>
-        <button @click="qqqqq">popular</button>
         <ul>
             <li class="musicList" v-for="item in videos" :key="item.id">
                 <div :id="'player_'+item.id"></div>
@@ -17,9 +15,9 @@
                     <div class="ml_img">
                         <img class="ml_i_album" :src="item.thumbnail" alt="">
                         <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
-                            <img class="ml_i_play"  src="/img/img/play.svg" alt="play" v-if="playerState == 'pause' || videoCalled != item.id">
-                            <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" v-if="playerState == 'playing' && videoCalled == item.id">
-                            <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay" v-if="false">
+                            <img class="ml_i_play"  src="/img/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
+                            <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
+                            <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0">
                         </div>
                     </div>
                 </div>
@@ -29,10 +27,10 @@
                         <p class="ml_artist">{{ item.artist }}</p>
                     </div>
                     <div class="ml_player">
-                        <div class="ml_p_bar">
+                        <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
                             <div class="bar_line"></div>
                         </div>
-                        <p class="ml_p_current">00:00</p>
+                        <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">00:00</p>
                         <p class="nl_p_duration">
                             {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
                             {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
@@ -61,52 +59,56 @@ import Youtube from './youtube.vue'
 import axios from 'axios';
 import {ref as dataRef, get, child, update} from 'firebase/database';
 import {useDatabase, useAuth} from '../datasources/firebase.js'
-import { onMounted, ref, reactive, watch , computed} from 'vue';
+import { onMounted, ref, reactive, watch , computed, onBeforeMount} from 'vue';
 import { useStore } from 'vuex';
     const store = useStore();
-var player;
+let player;
 // common ------------------------------------------------------------------
 const inputFocus = () => {
     const q1 = document.querySelector(".focusLine");
     const q2 = document.querySelector(".sb_btn");
     q1.style.width = '100%';
-    q2.style.borderColor = 'rgb(255, 136, 0)';
+    q2.style.borderColor = '#A60A27';
 }
 const inputFocusOut = () => {
     const q1 = document.querySelector(".focusLine");
     const q2 = document.querySelector(".sb_btn");
     q1.style.width = '0%';
-    q2.style.borderColor = '#aaa';
+    q2.style.borderColor = '#aaaaaa';
 }
 // API key 받아오기 ----------------------------------------------- //
 let APIkey = ref('');
-async function getKey(){
-  const q = await get(child(dataRef(useDatabase), 'API_key'));
-  if( q.exists()){
-    APIkey = q.val();
-    return q.val();
-  } else {
-    const r = console.log('not has API key.') 
-  }
-}
+
 //----------------------------------------------------------------
 
 let videos = ref([]);
-let cover = reactive(document.querySelectorAll(".ml_i_cover"))
 let userPlaylist = ref([]);
-onMounted(function(){
-    // 유튜브 api 로드 //------------------------------------------------------
-   onYouTubeIframeAPIReady()
-    // ----------------------------------------------------------------------
 
-    const mo = async function(){
-        const APIs = await getKey();
-        // 첫 로딩 시 인기 음악 정렬 //
+onMounted(function(){
+    // Youtube API key 호출 //
+    get(dataRef(useDatabase,'API_key'),)
+    .then(snapshot => {
+        const data = snapshot.val();
+        APIkey.value = data;
+        return data;
+    })
+    .then(data => {
+        mo(data);
+        onYouTubeIframeAPIReady();
+        return player
+    }).then((player) => {
+        watch(() => player.getCurrentTime(), cur => {
+            console.log(cur)
+        },{immediate:true,deep:true})
+    })
+    
+    // 첫 로딩 시 인기 음악 정렬 //
+    const mo = async function(APIkeys){
         const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
             params: {
                 part: 'snippet, contentDetails',
                 type: 'video',
-                key: APIs,
+                key: APIkeys,
                 chart: 'mostPopular',
                 regionCode : 'kr',
                 videoCategoryId: '10',
@@ -115,7 +117,7 @@ onMounted(function(){
             }
         });
         const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
-        console.log(dataArr2)
+        console.log('[인기 음악 목록]',dataArr2)
         const dataArr = await dataArr2.map(item => ({
                 id: item.id,
                 title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
@@ -126,10 +128,9 @@ onMounted(function(){
             }));
         videos.value = await dataArr
     }
-    mo()
 })
-let searchs = ref('');
 // 검색 제출 시 내용 도출 //
+let searchs = ref('');
 async function getId(){
     const res = await axios.get("https://www.googleapis.com/youtube/v3/search",{
         params: {
@@ -150,14 +151,15 @@ async function getId(){
             url: `https://www.youtube.com/watch?v=${item.id.videoId}`
         }));
 
-    const durationPromises = await dataArr.map(item => {
-        return axios.get("https://www.googleapis.com/youtube/v3/videos", {
-        params: {
+    const durationPromises = await dataArr.map(async (item) => {
+        const response = await axios.get("https://www.googleapis.com/youtube/v3/videos", {
+            params: {
             part: 'contentDetails',
             id: item.id,
             key: APIkey
-        }})
-    .then(response => response.data.items[0].contentDetails.duration);
+            }
+            });
+            return response.data.items[0].contentDetails.duration;
     });
 
     Promise.all(durationPromises).then(durations => {
@@ -193,57 +195,42 @@ const addToList = function(lists,key,item){
     //3. 음악 재생 버튼
 //  https://developers.google.com/youtube/iframe_api_reference?hl=ko#Loading_a_Video_Player
 
-let playerState = ref('pause');
+let playState = ref(-1)
 let videoCalled = ref(null);
-let readyVideo = ref(false)
-
+let playTime = ref(0);
 const clickToMusicPlay = function(currentId){
-     if( videoCalled.value != currentId){
-        const qqq = new Promise((res) => {
-            readyVideo.value = false;
-            res() })
-        qqq
-        .then(() => { player.cueVideoById({ videoId : currentId }) })
-        .then(() => { readyVideo.value = true; })
-        
-         videoCalled.value = currentId
-     }
-     if( readyVideo.value && videoCalled.value == currentId && playerState.value == 'playing'){
+     if( videoCalled.value != currentId ) {
+        player.loadVideoById(currentId);
+        videoCalled.value = currentId;
+    } else if ( player.getPlayerState() == 1 ){
         player.pauseVideo();
-        playerState.value = 'pause';
-     }
-     if( readyVideo.value && videoCalled.value == currentId && playerState.value == 'pause'){
-        player.playVideo();
-        playerState.value = 'playing'
+    } else {
+        player.playVideo()        
      }
 }
 
-
     // 초기 영상 로드 //
-async function onYouTubeIframeAPIReady() {
+function onYouTubeIframeAPIReady() {
     store.commit('setSetLoading',true)
     player = new YT.Player('youtubePlayer', {
-        height: '10',
-        width: '20',
+        height: '0',
+        width: '0',
         videoId: '0c7zGU2C2mM',
         events: {
         'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange
+        'onStateChange': stateChange
         }
     })
     store.commit('setSetLoading',false)
 }
-
+function stateChange(event) {
+    playState.value = event.data;
+    
+}
 function onPlayerReady(event) {
-    event.target.playVideo();
+    event.target.pauseVideo();
 }
 var done = false;
-function onPlayerStateChange(event) {
-if (event.data == YT.PlayerState.PLAYING && !done) {
-    setTimeout(stopVideo, 6000);
-    done = true;
-}
-}
 function stopVideo() {
 player.stopVideo();
 }
@@ -345,6 +332,9 @@ player.stopVideo();
     width: 0;
     transition: .8s ease-in-out;
 }
+.ml_p_bar.ml_p_active {
+    width: 70%
+}
 .ml_p_current {
     width: 0em;
     overflow: hidden;
@@ -352,11 +342,8 @@ player.stopVideo();
     justify-content: start;
     transition: .5s ease-in-out;
 }
-.ml_p_current.playStart {
+.ml_p_current.ml_p_active {
     width: 3em;
-}
-.ml_p_bar.playStart {
-    width: 100%;
 }
 .ml_player p{
     padding: 0px;
@@ -461,7 +448,7 @@ player.stopVideo();
     right: 0;
     width: 0;
     height: 1px;
-    background-color: rgb(255, 136, 0);
+    background-color: #A60A27;
     transition: .5s ease;
 }
 .sb_btn {
@@ -477,7 +464,7 @@ player.stopVideo();
     transition: .5s ease;
 }
 .sb_btn:hover {
-    background-color: rgba(255, 136, 0,0.6);
+    background-color: #a60a278a;
     border-color: transparent;
 }
 </style>../../public/youtube.js@/youtube.js
