@@ -1,28 +1,6 @@
 <template>
     <div id="playlist">
-        <h3>playlist.vue</h3>
-        <hr>
-        <div class="listBox">
-            <ul class="listRoll">
-                <li v-for="item in 10">
-                    <div class="card">
-                        <div class="cover">
-                            <img src="../assets/img/cheese.png" alt="">
-                        </div>
-                        <div class="text">
-                            <p class="text_title">{{ sampleList.title + item}}</p>
-                            <p class="text_sub">
-                                <span class="playtime">{{ playtimeCalc(sampleList) }}</span>
-                                <span class="numbers"></span>
-                            </p>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-            <div class="contentBox"></div>
-        </div>
-        <div class="randomHash">
-        </div>
+        
     </div>
 </template>
 

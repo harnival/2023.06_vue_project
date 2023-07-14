@@ -15,9 +15,9 @@
                     <div class="ml_img">
                         <img class="ml_i_album" :src="item.thumbnail" alt="">
                         <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
-                            <img class="ml_i_play"  src="/img/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
-                            <img class="ml_i_pause"  src="/img/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
-                            <img class="ml_i_replay"  src="/img/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0">
+                            <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
+                            <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
+                            <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0">
                         </div>
                     </div>
                 </div>
@@ -242,12 +242,12 @@ player.stopVideo();
     display: flex;
     align-items: center;
     gap: 1rem;
-    border: 1px dashed tomato;
     width: 80%;
     height: max(14vh, 4rem);
     background-color: white;
-    padding: 0.5em;
+    padding:2rem 0.5em;
     margin: auto;
+    border-bottom: 1px solid #666;
 }
 .ml_img_wrap {
     height: 100%;
@@ -361,7 +361,7 @@ player.stopVideo();
     font-size: 0px;
 }
 .ml_m_add {
-    background: url('/img/img/plus.png') center/80% no-repeat;
+    background: url('../assets/img/plus.png') center/80% no-repeat;
     margin-bottom: 3px;
     position: relative;
     display: flex;
@@ -384,7 +384,7 @@ player.stopVideo();
     color: white;
 }
 .ml_m_search {
-    background: url('/img/img/search.svg') center/80% no-repeat;
+    background: url('../assets/img/search.svg') center/80% no-repeat;
     position: relative;
     display: flex;
     align-items: center;
@@ -417,7 +417,7 @@ player.stopVideo();
     display: block;
     text-decoration: none;
     color: black;
-    background: url('/img/img/plus.png') no-repeat center left 1rem/ contain;
+    background: url('../assets/img/plus.png') no-repeat center left 1rem/ contain;
 }
 .ml_m_mylist li a:hover {
     background-color: rgba(255,255,255,0.5);
@@ -427,6 +427,8 @@ player.stopVideo();
     position: relative;
     display: flex;
     justify-content: center;
+
+    padding-bottom: 3rem;
 }
 .sb_inputWrap {
     width: 50%;
@@ -434,12 +436,11 @@ player.stopVideo();
 }
 .searchBox input {
     width: 100%;
-    height: 2.5em;
     font-size: 100%;
-    padding: 0.5em 10%;
+    padding: 1rem 10%;
     box-sizing: border-box;
     border: 0;
-    border-bottom: 1px solid #aaa;
+    border-bottom: 2px solid #aaa;
     outline: none;
 }
 .focusLine {
@@ -447,7 +448,7 @@ player.stopVideo();
     bottom: 0;
     right: 0;
     width: 0;
-    height: 1px;
+    height: 2px;
     background-color: #A60A27;
     transition: .5s ease;
 }
@@ -456,15 +457,17 @@ player.stopVideo();
     position: absolute;
     right: 0;
     top: 0;
-    border: 1px solid #aaaaaa;
-    background: transparent url('/img/img/search.svg') center/2rem no-repeat;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #aaaaaa;
+    background: transparent url('../assets/img/search.svg') center/2rem no-repeat;
     height: 100%;
-    width: 5rem;
+    aspect-ratio: 2/1;
     cursor: pointer;
     transition: .5s ease;
 }
 .sb_btn:hover {
     background-color: #a60a278a;
-    border-color: transparent;
+    border-color: #a60a278a;
 }
-</style>../../public/youtube.js@/youtube.js
+</style>

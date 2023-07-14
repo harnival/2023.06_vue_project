@@ -1,16 +1,15 @@
 <template>
   <div class="loadingPage" v-if="store.getters.getSetLoading">
-    <h2>LOADING.........</h2>
+    <div>
+      <img src="./assets/img/main-icon-fill2.png">
+      <strong>CHEEZS</strong>
+    </div>
   </div>
   <div id="appBox" v-else>
     <header>
-      <!-- <div class="navBtn">
-        <button type="button" @click="store.dispatch('logout')">(임시) logout</button>
-        <button type="button" @click="console.log(store.getters.getAccount, useAuth.currentUser)">[임시]loginState</button>
-      </div> -->
       <div class="accounts">
         <div class="nav_account" v-if="store.getters.loginStateCheck">
-          <div class="nav_a_info" @click="slideAccount">
+          <div class="nav_a_info beforeClick" @click="slideAccount">
             <div class="nav_a_avatar">
               <img :src="store.getters.getAccount.photoURL">
             </div>
@@ -30,17 +29,20 @@
                 <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
               <hr>              
-              <dl>
-                <dt>내 플레이리스트</dt>
+              <p class="nav_a_menu_plTitle">내 플레이리스트</p>
+              <ul v-if="!listState">
                 <dd class="nav_a_menu_nolist"><p>플레이리스트가 없습니다.</p></dd>
-              </dl>
+              </ul>
+              <ul v-if="listState">
+                <li v-for="item in myPlaylist">{{ item.title }}</li>
+              </ul>
             </div>
           </div>
         </div>
-        <div class="logout_account" v-else>
+        <!-- <div class="logout_account" v-else>
           <button type="button">로그인</button>
           <button type="button">회원가입</button>
-        </div>
+        </div> -->
         <nav>
           
         </nav>
@@ -49,7 +51,9 @@
     <main>
       
       <div class="mainWrap">
-        <router-view></router-view>
+        <Transition name="maintrans">
+          <router-view></router-view>
+        </Transition>
       </div>
     </main>
   </div>
@@ -57,7 +61,7 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onBeforeMount,onMounted} from 'vue';
+import {ref,reactive, onBeforeMount, watch, Transition} from 'vue';
 import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
@@ -91,13 +95,15 @@ onBeforeMount(function(){
 
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
+  const navInfo = document.querySelector(".nav_a_info")
   const menu = document.querySelector(".nav_a_menu");
-  const navAccount = document.querySelector(".nav_account")
+  const accounts = document.querySelector(".accounts")
   const h = document.querySelector(".nav_a_menuWrap").offsetHeight;
   menu.classList.toggle('drawing');
-  navAccount.classList.toggle('drawing')
+  accounts.classList.toggle('drawing');
+  navInfo.classList.toggle('beforeClick')
   if(menu.classList.contains('drawing')){
-    menu.style.height = h + "px"
+    menu.style.height = '100vh'
     menu.style.backgroundColor = 'var(--main-color1)'
   } else {
     menu.style.height = 0 + "px"
@@ -105,10 +111,28 @@ const slideAccount = function(){
 
   }
 }
-
+// nav에 플레이리스트 //
+let myPlaylist = reactive({});
+let listState = ref(true)
+const form = reactive({
+    account : store.getters.getAccount,
+    playlists : store.getters.getDataPlaylists
+})
+watch(() => [form.account, form.playlists], (cur) => {
+    if (cur[0]) {
+        if (!cur[0]['playlist']){
+            listState.value = false
+        } else {
+            listState.value = true
+            for(const key in cur[0]['playlist']) {
+                myPlaylist[key] = cur[1][key]
+            }
+        }
+    }
+},{immediate: true, deep: true})
 // account menu 이동 //
 const goAccount = function(){
-  oRouter.push({ name: 'account', params : { ids : 'my'}})
+  oRouter.push({ name: 'account', params : { ids : useAuth.currentUser.uid}})
   slideAccount()
 }
 const goHome = function(){
@@ -145,8 +169,9 @@ const goSetting = function(){
 
 <style>
 :root {
-  --inputwrap-label-bg: white;
+  --inputwrap-label-bg: #f0f0fd;
   --main-color1:rgb(255, 210, 11);
+  --header-height: 7rem;
 }
 body {
   margin: 0;
@@ -176,16 +201,17 @@ a {
   text-decoration: none;
   color: black;
 }
+h1,h2,h3,h4,h5,h6 {
+  margin: 0; padding: 0;
+}
 #app {
   width: 100%;
   text-align: center;
   background-color: transparent;
+  background-color: #ffffff;
 }
 #appBox {
-  max-width: 1280px;
-  margin: 0 auto;
   box-sizing: border-box;
-  padding-top: 10vh;
 }
 .inputwrap {
   position: relative;
@@ -234,7 +260,7 @@ label.label_value {
   display: block;
   border: 0;
   font-size: 0px;
-  background: transparent url('/img/img/dots-vertical.svg') no-repeat center/ 150%;
+  background: transparent url('./assets/img/dots-vertical.svg') no-repeat center/ 150%;
 }
 .sec1_title_menu {
         position: absolute;
@@ -263,30 +289,81 @@ label.label_value {
 </style>
 
 <style scoped>
-.nav_account {
+.loadingPage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 300%;
+  font-family: 'Oswald';
+  background-color: rgb(255,210,11);
+}
+.loadingPage > div {
+  padding: 10%;
+  aspect-ratio: 1/1;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.loadingPage img {
+  width: min(20vw, 100px);
+}
+.accounts {
   position: absolute;
   right: 0;
   top: 0;
-  min-height: max(5vh, 4rem);
+  padding: 1rem;
   transition: .3s ease;
-  background-color: white;
 }
-.nav_account.drawing {
+.nav_account {
+  width: max(16vw, 250px);
+  height: var(--header-height);
+}
+.accounts.drawing {
   background-color: var(--main-color1);
+  box-shadow: -5px 5px 4px 10px black;
 }
 .nav_a_avatar {
-  height: 10vh;
+  height: 7rem;
   aspect-ratio: 1/1;
   border: 1px solid #66666679;
   border-radius: 50%;
   overflow: hidden;
   background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .nav_a_avatar img {
   width: 100%;
 
 }
+.nav_a_name{
+  position: relative;
+  font-size: 120%;
+}
+.nav_a_name::after {
+  content: '';
+  background: url('/img/img/chevron-down.svg') no-repeat center/1.2rem 1.2rem;
+  display: block;
+  width: 1rem;
+  height: 100%;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  padding-left: 1rem;
+}
 .nav_a_menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
   width: 100%;
   overflow: hidden;
   box-sizing: border-box;
@@ -317,29 +394,20 @@ label.label_value {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 5% 3rem 5% 1rem;
-  box-sizing: border-box;
+  border-radius: 3.5rem;
+  padding-right: 2rem;
   height: 100%;
   cursor: pointer;
   transition: .3s ease;
 }
-.nav_a_info:hover {
-  background-color: #b8b8b86c;
+.nav_a_info.beforeClick {
+  color: white;
 }
-.nav_a_name{
-  position: relative;
+.nav_a_info.beforeClick:hover {
+  background-color: rgb(255,210,11,0.5);
+  color: black;
 }
-.nav_a_name::after {
-  content: '';
-  background: url('/img/img/chevron-down.svg') no-repeat center/1.2rem 1.2rem;
-  display: block;
-  width: 1rem;
-  height: 100%;
-  position: absolute;
-  left: 100%;
-  top: 0;
-  padding-left: 5px;
-}
+
 .nav_a_menuWrap li a {
   display: flex;
   justify-content: center;
@@ -359,4 +427,13 @@ hr {
   border: 0;
   background-color: #666;
 }
-</style>../public/youtube-player-api
+.nav_a_menu_plTitle{
+  padding: 1rem 0;
+  font-weight: 500;
+}
+.nav_a_menu_plTitle li{
+  padding-bottom: 0.5rem;
+  font-weight: 400;
+}
+
+</style>

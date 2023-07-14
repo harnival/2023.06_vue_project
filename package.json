@@ -13,6 +13,7 @@
     "axios": "^1.4.0",
     "cors": "^2.8.5",
     "firebase": "^9.23.0",
+    "firebase-tools": "^12.4.4",
     "path": "^0.12.7",
     "register-service-worker": "^1.7.2",
     "roboto-fontface": "*",

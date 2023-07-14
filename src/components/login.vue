@@ -1,6 +1,9 @@
 <template>
     <div id="loginBox">
         <div class="inputs">
+            <div class="inputs_title">
+                <p>로그인</p>
+            </div>
             <form @submit.prevent="clickLogin" id="loginForm">
                 <div>
                     <div class="inputwrap" id="inputwrap_id">
@@ -30,7 +33,7 @@
 </template>
 
 <script setup>
-import {onBeforeMount, onMounted, onUpdated, ref} from 'vue';
+import {onBeforeMount, onMounted, onUpdated, ref, watch} from 'vue';
 import { useRouter} from 'vue-router';
     const router = useRouter();
 import {useAuth, useDatabase} from '../datasources/firebase.js'
@@ -76,26 +79,63 @@ const clickLogin = function(e){
     } else if ( !dataobj.user_pwd ) {
         inputwrap_pwd.classList.add("requireInput");
         user_pwd.classList.add("requireInput");
-    }else {
+    } 
+    else {
         // 로그인 에러 확인 및 완료 --> 사용자 정보 저장 후 메인 페이지로 이동
-        store.dispatch('loginWithEmail',dataobj);
+        store.dispatch('loginWithEmail',dataobj)
     }
 }
+onMounted(function(){
+    watch(() => store.getters.getLoginError, (cur) => {
+        const loginForm = document.getElementById('loginForm')
+        if(cur){
+            loginForm.classList.add('wrongLogin');
+        } else {
+            loginForm.classList.remove('wrongLogin')
+        }
+    },{immediate:true})
+})
+
 
 </script>
 
 <style scoped>
-#loginBox {
+.inputs_title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    text-align: center;
+    font-size: 300%;
     width: 100%;
+    color: var(--main-color1);
+    font-weight: 500;
+    margin: auto;
+}
+.inputs_title p {
+    margin: auto;
+}
+#loginBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
     height: 100vh;
     background-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: var(--main-color1);
+}
+.inputs {
+    position: relative;
+    background-color: #f0f0fd;
+    width: 100%;
+    padding: 10%;
 }
 #loginForm{
     position: relative;
-    margin-bottom: 2rem;
+    margin: 0px auto 2rem;
+    width: min(80vw, 300px);
 }
 #loginForm.wrongLogin::before {
     content: '이메일 또는 비밀번호가 틀렸습니다. 다시 입력해주세요.';
@@ -106,7 +146,7 @@ const clickLogin = function(e){
     display: flex;
     justify-content: center;
     color: red;
-    font-size: 90%;
+    font-size: 100%;
     white-space: nowrap;
     word-break: keep-all;
 
@@ -175,7 +215,7 @@ const clickLogin = function(e){
     cursor: pointer;
     transition: .3s ease-in-out;
     transform-origin: center;
-    background: #ddd url('/img/img/arrow_right.png') center/ 80%;
+    background: #ddd url('../assets/img/arrow_right.png') center/ 80%;
 }
 .inputBtn button:hover {
     transform: scale(1.1,1.1);

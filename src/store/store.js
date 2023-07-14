@@ -11,6 +11,8 @@ const store = createStore({
       nowSearchMusic: null,
       // 로딩 지연 //
       setLoading: false,
+      // 로그인 에러 발생 시 메세지 호출 //
+      loginError : null,
       // database data //
       dataUsers : {},
       dataPlaylists : {},
@@ -41,6 +43,9 @@ const store = createStore({
     },
     setDataHashs(state,payload){
       state.dataHashs = payload
+    },
+    setLoginError(state,payload){
+      state.loginError = payload
     }
     
   },
@@ -69,26 +74,27 @@ const store = createStore({
     },
     getDataHashs(state){
       return state.dataHashs
+    },
+    getLoginError(state){
+      return state.loginError
     }
     
   },
   actions: {
-    loginWithEmail({commit},payload){
-      commit('setSetLoading',true);
+    loginWithEmail({commit, state},payload){
       signInWithEmailAndPassword(useAuth, payload.user_id , payload.user_pwd)
       .then(usercredential => {
         const uid = usercredential.user.uid;
-        get(ref(useDatabase, `account/${uid}`))
-        .then(snapshot => {
-          const data = snapshot.val();
-        })
-        commit('setSetLoading', false);
+        commit('loginAccount', state.dataUsers[uid])
+        commit('setSetLoading',false);
       })
       .catch(err => {
         const code = err.code;
         const message = err.message;
         console.log("[Login Error]" + code + " => " + message);
-      })
+        commit('setLoginError',true)
+      });
+      
     },
 
     logout({commit}){

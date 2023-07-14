@@ -2,6 +2,12 @@
     <div id="signInBox">
         <form @submit.prevent>
             <div class="signpage_1 signpage" v-if="signinPage == 1">
+                <div class="signinBox_title">
+                    <span>회원정보입력</span>
+                </div>
+                <div>
+                    회원가입을 위해 이메일과 비밀번호를 입력하세요.
+                </div>
                 <div class="inputwrap signEmail">
                         <label for="signin_email">이메일</label>
                         <input type="text" name="email" id="signin_email" v-model="userInfo.email" required >
@@ -89,6 +95,10 @@ let signCheck = ref(1)
 
 // 이메일, 비밀번호 입력 후 정보 기입 이동 //
 const sign_1 = () => {
+    for( const key in store.getters.getDataUsers ){
+        const q = store.getters.getDataUsers;
+        
+    }
     
     if (!signin_email.value) {
         signin_email.classList.add('required')
@@ -220,16 +230,32 @@ const inputMotion = function(){
 
 <style scoped>
 #signInBox {
-    width: 100%;
+    width: 100vw;
     height: 100vh;
     background-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
+    background-color: var(--main-color1);
+}
+#signInBox > form {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background-color: #f0f0fd;
+    padding: 2rem 0;
+}
+.signinBox_title {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    font-size: 300%;
+    color: #f0f0fd;
 }
 .signpage {
     margin: auto;
-    width: min(100vw, 500px);
+    width: min(80vw, 500px);
+    position: relative;
 }
 .signpage_2_wrap {
     display: block;
