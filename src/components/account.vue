@@ -46,7 +46,7 @@
                         <div class="a_pl_btns" v-if="!makeListPage">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>
-                        <div class="a_pl_makeList" v-else>
+                        <div class="a_pl_makeList">
                             <form @submit.prevent="saveMakeList">
                                 <div class="a_pl_m_cover" @click="openFile">
                                     <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
@@ -68,8 +68,8 @@
                                         <a href="/" @click.prevent="addTag">해시태그 추가</a>
                                     </div>
                                     <ul>
-                                        <li v-for="(item,index) in playlistContent.tag" :key="index">
-                                            #{{ item }}
+                                        <li v-for="(item,key) in playlistContent.tag" :key="index">
+                                            #{{ key }}
                                             <a href="/" @click.prevent="removeTag(index)"></a>
                                         </li>
                                     </ul>
@@ -105,7 +105,7 @@
                             </div>
                             <div class="a_pl_l_tag">
                                 <ul>
-                                    <li v-for="tags in item[1].tag"># {{ tags }}</li>
+                                    <li v-for="(tags,tagkey) in item[1].tag"># {{ tagkey }}</li>
                                 </ul>
                             </div>
                         </div>
@@ -200,13 +200,13 @@ const cancelMake = function(){
 
 // 플레이리스트 생성 //
 let playlistContent = reactive({});
-    playlistContent.tag = [];
-    playlistContent.tracks = [];
+    playlistContent.tag = {};
+    playlistContent.tracks = {};
     playlistContent.uid = route.params.ids == 'my'? useAuth.currentUser.uid : route.params.ids;
 const addTag = function(e){
     const v = e.target.value;
-    if(v){
-        playlistContent.tag.splice(0,0,v)
+    if(v && !playlistContent.tag[v]){
+        playlistContent.tag[v] = true
         e.target.value = '';
     }
 }
@@ -294,8 +294,16 @@ const clickToDeleteFollow = function(){
 </script>
 
 <style scoped>
+#accountBox {
+    padding-top: var(--header-height);
+    background-color: rgb(0,0,0,0.9);
+}
     .a_profile {
         display: flex;
+        width: 80%;
+        max-width: 1280px;
+        margin: auto;
+        background-color: var(--main-color1);
     }
     .a_p_content {
         display: flex;

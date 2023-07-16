@@ -5,7 +5,7 @@
             <div class="sectionWrap">
                 <div class="sec_title">
                     <h3>내 플레이리스트</h3>
-                    <a href="/" @click.prevent="router.push('/account',{params: {ids : useAuth.currentUser.uid}})" class="sec_title_btn">더 보기</a>
+                    <a href="/" @click.prevent="router.push({name: 'account',params: {ids : useAuth.currentUser.uid}})" class="sec_title_btn">더 보기</a>
                 </div>
     
                 <div class="sec_content">
@@ -24,7 +24,7 @@
                                 <li v-for="(item,key) in myPlaylist" class="sec_list" :key="key">
                                     <div class="sec_list_image">
                                         <img :src="item.cover">
-                                        <button type="button" @click.prevent>플레이리스트 재생</button>
+                                        <button type="button" @click.prevent="router.push({name: 'player', params : {listkey : key}})">플레이리스트 재생</button>
                                     </div>
                                     <div class="sec_list_text">
                                         <p class="sec1_l_t_title">
@@ -33,17 +33,17 @@
                                                 <button type="button" @click="clickOpen(key)">메뉴</button>
                                                 <div class="sec_title_menu" v-if="openMenuPop == key">
                                                     <a href="/" @click.prevent>수정</a>
-                                                    <a href="/" @click.prevent>삭제</a>
+                                                    <a href="/" @click.prevent="deleteList(key)">삭제</a>
                                                 </div>
                                             </div>
                                         </p>
                                         <p class="sec1_l_t_sub">
                                             <span>총 {{item.tracks? Object.entries(item.tracks).length : 0 }}곡</span>
-                                            <span>{{ item.totalLength? item.totalLength : 0  }}</span>
+                                            <span>{{  totalLength(item.tracks) }}</span>
                                         </p>
                                         <p class="sec1_l_t_tag">
                                             <ul>
-                                                <li v-for="tag in item.tag">#{{ tag }}</li>
+                                                <li v-for="(tag,tagkey) in item.tag">#{{ tagkey }}</li>
                                             </ul>
                                         </p>
                                     </div>
@@ -60,7 +60,7 @@
                 <div class="sec_title">
                     <h3># 인기 해시</h3>
                 </div>
-                <div class="sec_content" v-for="(item,key) in popularHashList">
+                <div class="sec_content2" v-for="(item,key) in popularHashList">
                     <div class="hash_title">
                         <p># {{ key }}</p>
                         <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
@@ -72,10 +72,10 @@
                         </div>
                         <div class="sec_list_wrap">
                             <ul>
-                                <li class="sec_list" v-for="items in item" :key="key">
+                                <li class="sec_list" v-for="(items,itemkey) in item" :key="key">
                                     <div class="sec_list_image">
                                         <img :src="store.getters.getDataPlaylists[items].cover">
-                                        <button type="button" @click.prevent>플레이리스트 재생</button>
+                                        <button type="button" @click.prevent="router.push({name: 'player', params: {listkey: itemkey}})">플레이리스트 재생</button>
                                         <div class="sec_list_maker" @click="goToMakerAccount(items)">
                                             <div class="sec_l_m_image">
                                                 <img :src=" store.getters.getDataUsers[store.getters.getDataPlaylists[items].uid].photoURL">
@@ -93,7 +93,7 @@
                                         </p>
                                         <p class="sec1_l_t_tag">
                                             <ul>
-                                                <li v-for="tag in store.getters.getDataPlaylists[items].tag">#{{ tag }}</li>
+                                                <li v-for="(tag,tagkey) in store.getters.getDataPlaylists[items].tag">#{{ tagkey }}</li>
                                             </ul>
                                         </p>
                                     </div>
@@ -113,13 +113,38 @@
                 </div>
             </div>
         </div>
+
+        <div class="listmodal" v-if="openmodal">
+            <form @submit.prevent>
+                <div class="lm_img">
+                    <input type="file" name="replaceImg" id="lm_replaceImg">
+                    <img :src="currentSelectList.cover">
+                    <div class="lm_img_cover"></div>
+                </div>
+                <div class="lm_title">
+                    <input type="text" :value="currentSelectList.title">
+                </div>
+                <div class="lm_tag">
+                    <div>
+                        <input type="text">
+                        <ul>
+                            <li v-for="(item,itemkey) in currentSelectList.tag">
+                                {{ itemkey }}
+                                <a href="/" @click.prevent=""></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="lm_tracks"></div>
+            </form>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref ,reactive, watch, computed} from 'vue';
 import { useDatabase , useAuth} from '../datasources/firebase';
-import { ref as dataRef, get } from 'firebase/database';
+import { ref as dataRef, get, update } from 'firebase/database';
 import { useStore } from 'vuex';
     const store = useStore();
 import { useRouter } from 'vue-router';
@@ -139,7 +164,9 @@ watch(() => [form.account, form.playlists], (cur) => {
         } else {
             listState.value = true
             for( const key in cur[0]['playlist']) {
-                myPlaylist[key] = cur[1][key]
+                if(cur[1].playlist){
+                    myPlaylist[key] = cur[1][key]
+                }
             }
         }
     }
@@ -221,18 +248,59 @@ const rightBtn = function(e){
         slideBody.style.left = `${bodyLeft + move}px`
     }
 }
+const totalLength = function(item){
+    if (!item) {
+        return '0초';
+    }
+    let n=0;
+    for ( const key in item) {
+        const q = item[key].duration[0] * 60 + item[key].duration[1] * 1;
+        n += q
+    }
+    const minutes = Math.floor(n/60);
+    const seconds = n%60;
+    const text = `${minutes}분 ${seconds}초`;
+    return text;
+}
+
+// 리스트 수정,삭제 //
+const deleteList = function(key){
+    const deletes = {};
+    const data = store.getters.getDataPlaylists[key];
+    for( const val of Object.values(data)){
+        deletes[`hashs/${val}/${key}`] = null
+    }
+    deletes[`playlists/${key}`] = null;
+    deletes[`account/${useAuth.currentUser.uid}/playlist/${key}`] = null;
+    deletes[`hashs/`]
+    update(dataRef(useDatabase),deletes);
+}
+let currentSelectList = ref(null);
+let openmodal = ref(false);
+const editList = function(key){
+    const q = store.getters.getDataPlaylists[key];
+    currentSelectList.value = q;
+    openmodal.value = true
+}
 </script>
 
 <style scoped>
     /* common */
     #homeWrap {
-        background-color: black;
-        padding-top: var(--header-height) ;
+        /* background-color: rgb(0,0,0,0.8); */
+        background:
+        linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
+            linear-gradient(240deg, transparent,red),
+            linear-gradient(45deg, transparent,yellow);
+        padding-top: var(--main-top-padding) ;
         
     }
     .section {
-        background-color: rgba(255,255,255,0.2);
-        margin: 4rem 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        width: 100%;
+        margin:0 auto max(10%, 4rem);
+        border-radius: 1rem;
+        padding: 2rem 1rem;
     }
     .sectionWrap {
         max-width: 1280px;
@@ -241,16 +309,21 @@ const rightBtn = function(e){
         position: relative;
     }
     .sec_content {
-        width: 100%;
-        margin: 0 auto;
-        padding: 1rem ;
+        width: min(90vw, 1280px);
+        margin: 1rem auto;
         box-sizing: border-box;
+    }
+    .sec_content2 {
+        width: min(90vw, 1280px);
+        margin:0 auto 5%;
+        padding: 0 2rem;
+
     }
     .leftArrow {
         transition: .3s ease;
         position: absolute;
         top: 50%;
-        left: -4rem;
+        right: calc(100% + 2rem) ;
         transform: translateY(-50%);
         border: 0;
         width: 3rem;
@@ -263,7 +336,7 @@ const rightBtn = function(e){
         transition: .3s ease;
         position: absolute;
         top: 50%;
-        right: -4rem;
+        left: calc(100% + 2rem);
         transform: translateY(-50%);
         border: 0;
         width: 3rem;
@@ -280,23 +353,25 @@ const rightBtn = function(e){
             justify-content: space-between;
             align-items: center;
             position: absolute;
-            bottom: 100%;
+            bottom: calc(100% + 3rem);
             left: 0;
             width: 100%;
             color: white;
+            text-shadow: 1px 0px 5px white;
         }
         .sec_title h3 {
-            font-family: 'Orbit';
-            font-size: 200%;
-            font-weight: 600;
+            font-family: 'NanumSquareNeoBold';
+            font-size: 250%;
+            font-weight: 500;
         }
         .sec_title_btn {
             text-decoration: none;
             color: black;
             display: block;
             font-size: 80%;
-            padding: 0.2em 2em 0.2em 1em;
-            background: url('../assets/img/chevron-double-right.svg') no-repeat center right/ contain;        
+            border-radius: 2em;
+            padding: 0.5em 3em 0.5em 2em;
+            background: rgb(255,255,255,0.6) url('../assets/img/chevron-double-right.svg') no-repeat center right 0.5em/ 1.5em 1.5em;        
             transition: .3s ease;
         }
         .sec_title_btn:hover {
@@ -313,6 +388,7 @@ const rightBtn = function(e){
             gap: 0.5rem;
             border-radius: 2rem;
             cursor: pointer;
+            padding-right: 1em;
             
         }
         .sec_list_maker:hover {
@@ -348,16 +424,17 @@ const rightBtn = function(e){
             position: relative;
             top: 0;
             left: 0;
+            
             display: flex;
             flex-wrap: nowrap;
-            gap: 2rem;
+            gap: 5rem;
             transition: .3s ease-in-out;
         }
         .sec_list {
-            width : 17vw;
-            min-width: 10rem;
+            width : max(18vw, 300px);
             box-sizing: border-box;
-            background-color: white;
+            display: flex;
+            flex-direction: column;
         }
         .sec_list_image{
             width: 100%;
@@ -367,7 +444,9 @@ const rightBtn = function(e){
             align-items: center;
             position: relative;
             background-color: rgba(0,0,0,0.9);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 1rem;
+            overflow: hidden;
         }
         .sec_list_image img {
             width: 100%;
@@ -385,13 +464,19 @@ const rightBtn = function(e){
             background: #ddd url('../assets/img/play.svg') no-repeat center / 80%;
     
         }
+        .sec_list_text {
+            background-color: rgb(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1rem;
+            flex: 1;
+        }
         .sec1_l_t_title {
             
             margin-bottom: 1rem;
             padding-right: 0.5rem;
             display: flex;
             justify-content: space-between;
-            overflow-x: hidden;
         }
         .sec1_l_t_t_wrap {
             font-size: 120%;
@@ -399,7 +484,28 @@ const rightBtn = function(e){
             word-break: keep-all;
             white-space: nowrap;
         }
-        
+        .pl_title_btn {
+            position: relative;
+        }
+        .sec_title_menu {
+            position: absolute;
+            top: 0%;
+            right: 110%;
+            word-break: keep-all;
+            background-color: rgb(0,0,0,0.5);
+            border-radius: 1rem;
+            backdrop-filter: blur(5px);        
+        }
+        .sec_title_menu a {
+            display: block;
+            font-size: 100%;
+            padding: 0.5em 2em;
+            color: #eeeeee;
+            transition: .2s ease-in-out;
+        }
+        .sec_title_menu a:hover {
+            background-color: rgb(255,255,255,0.3);
+        }
         .sec1_l_t_sub {
             font-size: 90%;
             color: #666;
@@ -413,7 +519,7 @@ const rightBtn = function(e){
             gap: 1rem;
         }
         .sec1_l_t_tag li {
-            background-color: rgb(194, 194, 255, 0.5);
+            background-color: rgb(255,210,11);
             padding: 0 1em;
             border-radius: 0.5em;
         }
@@ -428,11 +534,12 @@ const rightBtn = function(e){
             display: flex;
             justify-content: space-between;
             align-items: center;        
-            padding: 2rem;
+            padding: 0 2rem 1rem;
         }
         .hash_title p{
             font-family: 'Oswald', 'Noto Sans KR';
             font-size: 150%;
+            color: white;
             
         }
         .slideBox {

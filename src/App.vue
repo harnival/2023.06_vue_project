@@ -7,19 +7,25 @@
   </div>
   <div id="appBox" v-else>
     <header>
+      <div class="headerIcon" @click="goHome">
+        <img src="./assets/img/main-icon-fill2.png">
+        <h1>CHEEZS</h1>
+      </div>
       <div class="accounts">
         <div class="nav_account" v-if="store.getters.loginStateCheck">
-          <div class="nav_a_info beforeClick" @click="slideAccount">
-            <div class="nav_a_avatar">
-              <img :src="store.getters.getAccount.photoURL">
+          <div class="nav_a_info_wrap">
+            <div class="nav_a_info beforeClick" @click="slideAccount">
+              <div class="nav_a_avatar">
+                <img :src="store.getters.getAccount.photoURL">
+              </div>
+              <div class="nav_a_name">{{ store.getters.getAccount.name }}</div>
             </div>
-            <div class="nav_a_name">{{ store.getters.getAccount.name }}</div>
           </div>
           <div class="nav_a_menu">
             <div class="nav_a_menuWrap">
               <ul>
                 <li><a href="/" @click.prevent="goHome">홈</a></li>
-                <li><a href="/" @click.prevent="goPlaylist">탐색</a></li>
+                <!-- <li><a href="/" @click.prevent="goPlaylist">탐색</a></li> -->
                 <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
               </ul>
               <hr/>
@@ -29,13 +35,13 @@
                 <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
               <hr>              
-              <p class="nav_a_menu_plTitle">내 플레이리스트</p>
+              <!-- <p class="nav_a_menu_plTitle">내 플레이리스트</p>
               <ul v-if="!listState">
                 <dd class="nav_a_menu_nolist"><p>플레이리스트가 없습니다.</p></dd>
               </ul>
               <ul v-if="listState">
                 <li v-for="item in myPlaylist">{{ item.title }}</li>
-              </ul>
+              </ul> -->
             </div>
           </div>
         </div>
@@ -43,17 +49,12 @@
           <button type="button">로그인</button>
           <button type="button">회원가입</button>
         </div> -->
-        <nav>
-          
-        </nav>
       </div>
     </header>
     <main>
       
       <div class="mainWrap">
-        <Transition name="maintrans">
-          <router-view></router-view>
-        </Transition>
+        <router-view></router-view>
       </div>
     </main>
   </div>
@@ -97,18 +98,16 @@ onBeforeMount(function(){
 const slideAccount = function(){
   const navInfo = document.querySelector(".nav_a_info")
   const menu = document.querySelector(".nav_a_menu");
-  const accounts = document.querySelector(".accounts")
-  const h = document.querySelector(".nav_a_menuWrap").offsetHeight;
+  const infowrap = document.querySelector(".nav_a_info_wrap")
+  const w = infowrap.offsetWidth;
   menu.classList.toggle('drawing');
-  accounts.classList.toggle('drawing');
+  infowrap.classList.toggle('drawing');
   navInfo.classList.toggle('beforeClick')
+  menu.style.width = w + 'px'
   if(menu.classList.contains('drawing')){
-    menu.style.height = '100vh'
-    menu.style.backgroundColor = 'var(--main-color1)'
+    menu.style.transform = `translateX(0px)`
   } else {
-    menu.style.height = 0 + "px"
-    menu.style.backgroundColor = 'white'
-
+    menu.style.transform = `translateX(100%)`
   }
 }
 // nav에 플레이리스트 //
@@ -163,6 +162,7 @@ const goSetting = function(){
   slideAccount()
 
 }
+// 리스트 생성, 수정 창 //
 
 // 알림 설정 -------------------------------------------------------
 </script>
@@ -171,7 +171,8 @@ const goSetting = function(){
 :root {
   --inputwrap-label-bg: #f0f0fd;
   --main-color1:rgb(255, 210, 11);
-  --header-height: 7rem;
+  --header-height: 6rem;
+  --main-top-padding: 13rem;
 }
 body {
   margin: 0;
@@ -287,8 +288,32 @@ label.label_value {
         background-color: rgba(255,255,255,0.3);
     }
 </style>
-
 <style scoped>
+
+/* ======================================= */
+.headerIcon {
+  width: fit-content;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 0.5rem;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.headerIcon img {
+  height: 60%;
+  aspect-ratio: 1/1;
+}
+.headerIcon h1 {
+  font-size: 250%;
+  font-family: 'Oswald';
+  color: var(--main-color1);
+}
+/* ---------------------------------------header Icon */
+/* loading------------------------------------------ */
 .loadingPage {
   position: fixed;
   top: 0;
@@ -315,23 +340,52 @@ label.label_value {
 .loadingPage img {
   width: min(20vw, 100px);
 }
+/* -------------------------------------------------loading */
+/* account menu--------------------------------------------- */
 .accounts {
   position: absolute;
   right: 0;
   top: 0;
-  padding: 1rem;
+  height: 100vh;
   transition: .3s ease;
 }
+  /* account > user  */
 .nav_account {
-  width: max(16vw, 250px);
-  height: var(--header-height);
+  height: 100%;
+  position: relative;
 }
-.accounts.drawing {
+.nav_a_info_wrap {
+height: var(--header-height);
+min-width: max(15vw, 250px);
+width: fit-content;
+display: flex;
+align-items: center;
+transition: .4s ease;
+position: absolute;
+top: 0;
+right:0;
+}
+.nav_a_info {
+  width: 90%;
+  box-shadow: -3px 1px 5px 0px #66666679;
+  height: 80%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 3.5rem;
+  cursor: pointer;
+  transition: .3s ease;
   background-color: var(--main-color1);
-  box-shadow: -5px 5px 4px 10px black;
+}
+.nav_a_info.beforeClick {
+  color: black;
+  box-shadow: none;
+}
+.nav_a_info.beforeClick:hover {
+  background-color: rgb(255,210,11,0.5);
 }
 .nav_a_avatar {
-  height: 7rem;
+  height: 100%;
   aspect-ratio: 1/1;
   border: 1px solid #66666679;
   border-radius: 50%;
@@ -360,24 +414,31 @@ label.label_value {
   top: 0;
   padding-left: 1rem;
 }
+  /* account > menu */
 .nav_a_menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
+  width: 0px;
   overflow: hidden;
-  box-sizing: border-box;
   display: flex;
-  align-items: end;
-  height: 0px;
+  justify-content: start;
+  height: calc(90vh);
   transition: .4s ease;
+  float: right;
+  border-radius: 2rem;
+  background-color: rgb(255,210,11,0.9);
+  backdrop-filter: blur(3px);
+  position: absolute;
+  bottom: 0;
+  right: 0;
 
-  background-color: white;
+}
+.nav_a_menu.drawing {
+  box-shadow: -3px 1px 5px 0px #66666679;
 }
 .nav_a_menuWrap {
-  width: 100%;
+  width: 20vw;
   height: 90vh;
-  padding-bottom: 1rem;
+  word-break:keep-all;
+  white-space: nowrap;
 }
 .nav_a_menu_playlist {
   color: #ddd;
@@ -390,23 +451,7 @@ label.label_value {
   width: max-content;
   background-color: rgba(255,255,255);
 }
-.nav_a_info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  border-radius: 3.5rem;
-  padding-right: 2rem;
-  height: 100%;
-  cursor: pointer;
-  transition: .3s ease;
-}
-.nav_a_info.beforeClick {
-  color: white;
-}
-.nav_a_info.beforeClick:hover {
-  background-color: rgb(255,210,11,0.5);
-  color: black;
-}
+
 
 .nav_a_menuWrap li a {
   display: flex;

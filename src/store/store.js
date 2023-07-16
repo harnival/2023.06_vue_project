@@ -1,7 +1,7 @@
 import { createStore } from 'vuex'
 import {useAuth, useDatabase} from '../datasources/firebase.js'
-import {signInWithEmailAndPassword, signOut, onAuthStateChanged} from 'firebase/auth';
-import { get, ref, onValue } from 'firebase/database';
+import {signInWithEmailAndPassword, signOut, onAuthStateChanged, deleteUser} from 'firebase/auth';
+import { get, ref, onValue , remove, query, orderByKey} from 'firebase/database';
 // Create a new store instance.
 const store = createStore({
   state () {
@@ -9,6 +9,7 @@ const store = createStore({
       pageRouting: 'Home',
       loginState : null,
       nowSearchMusic: null,
+      innerNotification : [],
       // 로딩 지연 //
       setLoading: false,
       // 로그인 에러 발생 시 메세지 호출 //
@@ -16,7 +17,8 @@ const store = createStore({
       // database data //
       dataUsers : {},
       dataPlaylists : {},
-      dataHashs : {}
+      dataHashs : {},
+      dataMusicSearch : {}
     }
   },
   mutations: {
@@ -46,6 +48,16 @@ const store = createStore({
     },
     setLoginError(state,payload){
       state.loginError = payload
+    },
+    setDataMusicSearch(state,payload){
+      state.dataMusicSearch = payload
+    },
+    setInnerNotification(state,payload){
+      state.innerNotification.push(payload)
+      const len = state.innerNotification.length;
+      setTimeout(function(){
+        state.innerNotification.splice(len-1,1);
+      },2000);
     }
     
   },
@@ -75,8 +87,14 @@ const store = createStore({
     getDataHashs(state){
       return state.dataHashs
     },
+    getDataMusicSearch(state){
+      return state.dataMusicSearch
+    },
     getLoginError(state){
       return state.loginError
+    },
+    getInnerNotification(state){
+      return state.innerNotification
     }
     
   },
@@ -137,9 +155,39 @@ const store = createStore({
         const data = snapshot.val()
         commit('setDataHashs',data);
         console.log('[hashs data]', data)
-      })      
+      })
+      onValue(ref(useDatabase,'musicSearch'), (snapshot) => {
+        const data = snapshot.val()
+        commit('setDataMusicSearch',data);
+        console.log('[musicSearch data]', data)
+      })
     },
-    
+    userDelete({state}){
+      const userUid = useAuth.currentUser.uid
+      deleteUser(useAuth.currentUser)
+      .then(() => {
+        const plobj = state.loginState.playlist;
+          plobj[userUid] = true;
+        for(const listname in plobj) {
+          const path = '/';
+          const db2 = ref(useDatabase, path);
+          get(db2).then(snapshot => {
+            if( snapshot.exists() ){
+              const data = snapshot.val();
+              const nodes = Object.entries(data).filter(([key, value]) => value == listname).map(([key]) => key);
+              nodes.forEach(nodeKey => {
+                remove(ref(useDatabase,`${path}/${nodeKey}`))
+              })
+            }
+          })
+        }
+        const dv = ref(useDatabase,'account/' + userUid)
+        remove(dv);
+      })
+      .then(() => {
+        router.push('/logIn');
+      })
+    }
   }
 })
 

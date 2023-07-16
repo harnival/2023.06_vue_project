@@ -4,8 +4,7 @@
             <h3>설정</h3>
             <ul>
                 <li><a href="/" @click.prevent>정보 수정</a></li>
-                <li><a href="/" @click.prevent>알림 설정</a></li>
-                <li><a href="/" @click.prevent>계정 탈퇴</a></li>
+                <!-- <li><a href="/" @click.prevent>알림 설정</a></li> -->
             </ul>
         </div>
         <div class="settingFrame">
@@ -54,6 +53,11 @@
                             </div>
                         </li>
                     </ul>
+                </div>
+                <div>
+                    <div>
+                        <a href="/" @click.prevent="store.dispatch('userDelete')">계정 탈퇴</a>
+                    </div>
                 </div>
             </div>
         </div>

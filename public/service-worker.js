@@ -23,3 +23,28 @@ self.addEventListener('fetch',function(event){
         })
     )
 })
+
+// 알림 설정 //
+const notiSet = function(){
+    Notification.permission( res => {
+        if( res == 'granted'){
+            navigator.serviceWorker.ready
+            .then(reg => {
+                reg.showNotification('title sample',{
+                    body: ' notification has already permitted',
+                    icon: './img/icons/android-chrome-192x192.png',
+                    tag: 'granted'
+                })
+            })
+        }
+    })
+}
+self.addEventListener('push',function(event){
+    const {title, body} = event.data.json();
+    const options = {
+        body,
+        icon: './img/icon/favicon-32x32.png',
+        badge: './img/icon/favicon-16x16.png'
+    }
+    event.waitUntil( self.ServiceWorkerRegistration.showNotification(title, options) )
+})

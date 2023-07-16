@@ -3,13 +3,13 @@
     "short_name" : "Vue PWA project",
     "icons": [
         {
-            "src" : "img/icons/favicon-16x16.png",
+            "src" : "./img/icons/favicon-16x16.png",
             "type": "image/png",
             "sizes": "16x16",
             "purpose": "any"
         },
         {
-            "src" : "img/icons/favicon-32x32.png",
+            "src" : "./img/icons/favicon-32x32.png",
             "type": "image/png",
             "sizes": "32x32",
             "purpose": "any"

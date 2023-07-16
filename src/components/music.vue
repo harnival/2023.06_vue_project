@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="musicBox">
         <div id="youtubePlayer"></div>
         <div class="searchBox">
             <div class="sb_inputWrap">
@@ -8,7 +8,11 @@
                 <button class="sb_btn" @click="getId">검색</button>
             </div>
         </div>
-        <ul>
+        
+        <ul class="musicList_wrap">
+            <li class="ml_empty" v-if="emptyResult">
+                <p>검색 결과가 없습니다.</p>
+            </li>
             <li class="musicList" v-for="item in videos" :key="item.id">
                 <div :id="'player_'+item.id"></div>
                 <div class="ml_img_wrap">
@@ -17,7 +21,7 @@
                         <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
                             <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
                             <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
-                            <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0">
+                            <!-- <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0"> -->
                         </div>
                     </div>
                 </div>
@@ -38,12 +42,59 @@
                     </div>
                 </div>
                 <div class="ml_menu">
-                    <button type="button" class="ml_m_add listup" @click="(e) => clickAdd(e,item.id)">플레이리스트에 추가</button>
+                    <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
                     <div class="ml_m_mylist" v-if="openAddPop == item.id">
                         <ul>
                             <li>+ 새 플레이리스트 만들기</li>
                             <li v-for="lists in userPlaylist" >
-                                <a href="/" @click.prevent="addToList(lists[1],lists[2],item)">{{ lists[1].title }}</a>
+                                <a href="/" @click.prevent="addToList(lists[0],item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
+                </div>
+            </li>
+        </ul>
+
+        <ul class="popularMusicList" v-if="popularText">
+            <li  class="popularTextLi"> # 인기 급상승 </li>
+            <li v-for="item in popularVideos" :key="item.id" class="musicList">
+                <div :id="'popularPlayer_'+item.id"></div>
+
+                <div class="ml_img_wrap">
+                    <div class="ml_img">
+                        <img class="ml_i_album" :src="item.thumbnail" alt="">
+                        <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
+                            <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
+                            <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
+                            <!-- <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0"> -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ml_text_wrap">
+                    <div class="ml_text">
+                        <h5 class="ml_title">{{ item.title }}</h5>
+                        <p class="ml_artist">{{ item.artist }}</p>
+                    </div>
+                    <div class="ml_player">
+                        <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
+                            <div class="bar_line"></div>
+                        </div>
+                        <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">00:00</p>
+                        <p class="nl_p_duration">
+                            {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
+                            {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
+                        </p>
+                    </div>
+                </div>
+                <div class="ml_menu">
+                    <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
+                    <div class="ml_m_mylist" v-if="openAddPop == item.id">
+                        <ul>
+                            <li>+ 새 플레이리스트 만들기</li>
+                            <li v-for="lists in userPlaylist" >
+                                <a href="/" @click.prevent="addToList(lists[0],item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
                             </li>
                         </ul>
                     </div>
@@ -78,22 +129,77 @@ const inputFocusOut = () => {
 }
 // API key 받아오기 ----------------------------------------------- //
 let APIkey = ref('');
+// functions ----------------------------------------------------------------
+    // 첫 로딩 시 인기 음악 정렬 //
+const mo = async function(APIkeys){
+    // database에 업로드 함수 //
+    popularText.value = true;
+    const set = function(datas){
+        const updates = {};
+        updates['musicSearch/popular'] = datas
+        update(dataRef(useDatabase),updates);
+        return datas
+    }
 
-//----------------------------------------------------------------
+    const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
+        params: {
+            part: 'snippet, contentDetails',
+            type: 'video',
+            key: APIkeys,
+            chart: 'mostPopular',
+            regionCode : 'kr',
+            videoCategoryId: '10',
+            videoSyndicated: 'true',
+            maxResults: 10
+        }
+    });
+    const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
+    console.log('[인기 음악 목록]',dataArr2)
+    const dataArr = await dataArr2.map(item => ({
+            id: item.id,
+            title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
+            artist: (item.snippet.channelTitle).split(' - Topic')[0],
+            thumbnail: `https://i.ytimg.com/vi/${item.id}/maxresdefault.jpg`,
+            url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+            duration: item.contentDetails.duration.match(/[0-9]+/g)
+        }));
+    const q = await set(dataArr);
+    popularVideos.value = await q
+}
+    // 날짜 설정 //
+const dateSetting = function(){
+    const currentDate = Date.now();
+    const lastSearchTime =store.getters.getDataMusicSearch['lastSearchTime']? new Date(store.getters.getDataMusicSearch['lastSearchTime']) : new Date(0);
+    if ( currentDate >= new Date(lastSearchTime.getFullYear(), lastSearchTime.getMonth(), lastSearchTime.getDate()+1,0,0) ){
+        const updates = {};
+            updates[`musicSearch/popular`] = false;
+            updates[`musicSearch/search`] = false;
+            updates[`musicSearch/lastSearchTime`] = currentDate;
+        update(dataRef(useDatabase),updates);
+    }
+}
 
+// ===================================================================
 let videos = ref([]);
-let userPlaylist = ref([]);
+let popularVideos = ref([]);
 
 onMounted(function(){
     // Youtube API key 호출 //
-    get(dataRef(useDatabase,'API_key'),)
+    get(dataRef(useDatabase,'API_key'))
     .then(snapshot => {
+        dateSetting(); // 날짜설정 호출
         const data = snapshot.val();
         APIkey.value = data;
         return data;
     })
     .then(data => {
-        mo(data);
+        const popular = store.getters.getDataMusicSearch['popular'];
+        if( !popular ) {
+            mo(data);
+        } else {
+            popularVideos.value = popular;
+            console.log('[popular music] get stored data')
+        }
         onYouTubeIframeAPIReady();
         return player
     }).then((player) => {
@@ -102,95 +208,95 @@ onMounted(function(){
         },{immediate:true,deep:true})
     })
     
-    // 첫 로딩 시 인기 음악 정렬 //
-    const mo = async function(APIkeys){
-        const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
-            params: {
-                part: 'snippet, contentDetails',
-                type: 'video',
-                key: APIkeys,
-                chart: 'mostPopular',
-                regionCode : 'kr',
-                videoCategoryId: '10',
-                videoSyndicated: 'true',
-                maxResults: 10
-            }
-        });
-        const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
-        console.log('[인기 음악 목록]',dataArr2)
-        const dataArr = await dataArr2.map(item => ({
-                id: item.id,
-                title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
-                artist: (item.snippet.channelTitle).split(' - Topic')[0],
-                thumbnail: item.snippet.thumbnails.high.url,
-                url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
-                duration: item.contentDetails.duration.match(/[0-9]+/g)
-            }));
-        videos.value = await dataArr
-    }
+    
 })
+
 // 검색 제출 시 내용 도출 //
 let searchs = ref('');
+let popularText = ref(true);    // 인기 리스트 출력
+let emptyResult = ref(false);   // 결과가 없을 시 안내 문구 출력
+console.log(store.getters.getDataMusicSearch)
 async function getId(){
-    const res = await axios.get("https://www.googleapis.com/youtube/v3/search",{
-        params: {
-            part: 'snippet',
-            type: 'video',
-            key: APIkey,
-            q: searchs.value + " Auto-generated by YouTube.",
-            videoCategoryId: '10',
-            videoSyndicated: 'true',
-            maxResults: 5
-        }
-    });
-    const dataArr = await res.data.items.map(item => ({
+    const searchData = store.getters.getDataMusicSearch['search'];
+    if( !searchs.value ) {
+        mo(APIkey.value);
+        return;
+    }
+    popularText.value = false
+    if( !searchData[searchs.value] ) {
+        const res = await axios.get("https://www.googleapis.com/youtube/v3/search",{
+            params: {
+                part: 'snippet',
+                type: 'video',
+                key: APIkey.value,
+                q: searchs.value + " Auto-generated by YouTube.",
+                videoCategoryId: '10',
+                videoSyndicated: 'true',
+                maxResults: 5
+            }
+        });
+        const dataArr = await res.data.items.map(item => ({
             id: item.id.videoId,
             title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
             artist: (item.snippet.channelTitle).split(' - Topic')[0],
-            thumbnail: item.snippet.thumbnails.high.url,
+            thumbnail: `https://i.ytimg.com/vi/${item.id.videoId}/maxresdefault.jpg`,
             url: `https://www.youtube.com/watch?v=${item.id.videoId}`
         }));
-
-    const durationPromises = await dataArr.map(async (item) => {
-        const response = await axios.get("https://www.googleapis.com/youtube/v3/videos", {
-            params: {
-            part: 'contentDetails',
-            id: item.id,
-            key: APIkey
-            }
+        
+        if(!dataArr) {
+            emptyResult.value = true;
+        }else {
+            emptyResult.value = false;
+            const durationPromises = await dataArr.map(async (item) => {
+                const response = await axios.get("https://www.googleapis.com/youtube/v3/videos", {
+                    params: {
+                    part: 'contentDetails',
+                    id: item.id,
+                    key: APIkey.value
+                    }
+                    });
+                    return response.data.items[0].contentDetails.duration;
             });
-            return response.data.items[0].contentDetails.duration;
-    });
+        
+            Promise.all(durationPromises).then(durations => {
+                dataArr.forEach((item, index) => {
+                    item.duration = durations[index].match(/[0-9]+/g);
+                })
+            }).then(res => {
+                videos.value = dataArr;
+                store.commit('storeSearching',dataArr);
+                console.log(videos.value);
+                console.log(dataArr);
+            })
+        }
 
-    Promise.all(durationPromises).then(durations => {
-        dataArr.forEach((item, index) => {
-            item.duration = durations[index].match(/[0-9]+/g);
-        })
-    }).then(res => {
-        videos.value = dataArr;
-        store.commit('storeSearching',dataArr);
-        console.log(videos.value);
-        console.log(dataArr);
-    })
-    
+    } else {
+        videos.value = searchData[searchs.value];
+        console.log('[music search] get stored data - ' + searchs.value);
+    }
 }
 // ---------------------------------------------------------------------------
 // 클릭 이벤트 //
     // 1. 플레이리스트 선택 창 열기
 let openAddPop = ref('');
-const clickAdd = function(event,key){
-    console.log(key)
-    userPlaylist.value = Object.entries(store.getters.getAccount.playlist).reverse();
+let userPlaylist = reactive({});
+// watch(()=> store.getters.getAccount, (cur) => {
+//     userPlaylist = cur.playlist;
+// },{immediate:true , deep:true})
+
+const clickAdd = function(key){
+    const q = Object.entries(store.getters.getAccount.playlist).reverse();
+    Object.assign(userPlaylist,q);
+   
     openAddPop.value = openAddPop.value == key? null : key;
-    console.log('[userPlaylist api]',userPlaylist.value)
 }
     // 2. 플레이리스트 선택
-const addToList = function(lists,key,item){
+const addToList = function(key,item){
     const updateToMine = {};
-        updateToMine[`account/${useAuth.currentUser.uid}/playlist/${key}/tracks/${item.id}`] = item;
-        updateToMine[`playlists/${key}/contents/tracks/${item.id}`] = item;
+        updateToMine[`playlists/${key}/tracks/${item.id}`] = item;
     update(dataRef(useDatabase),updateToMine);
     openAddPop.value = openAddPop.value == key? null : key;
+
 }
     //3. 음악 재생 버튼
 //  https://developers.google.com/youtube/iframe_api_reference?hl=ko#Loading_a_Video_Player
@@ -223,7 +329,7 @@ function onYouTubeIframeAPIReady() {
     })
     store.commit('setSetLoading',false)
 }
-function stateChange(event) {
+function stateChange(event) { // 플레이어 상태 변화 실시간 입력
     playState.value = event.data;
     
 }
@@ -231,21 +337,39 @@ function onPlayerReady(event) {
     event.target.pauseVideo();
 }
 var done = false;
-function stopVideo() {
-player.stopVideo();
-}
 </script>
 
 <style scoped>
+#musicBox {
+    padding-top: var(--header-height);
+    background-color: rgb(0,0,0,0.8);
+}
+.popularMusicList {
+    background-color: black;
+    padding: 0;
+    position: relative;
+}
+.popularTextLi {
+    text-align: start;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+}
+.musicList_wrap {
+    width: 70%;
+    margin: auto;
+    background-color: black;
+}
 .musicList {
     position: relative;
     display: flex;
     align-items: center;
     gap: 1rem;
-    width: 80%;
-    height: max(14vh, 4rem);
-    background-color: white;
-    padding:2rem 0.5em;
+    width: 100%;
+    height: max(18vh, 8rem);
+    background: linear-gradient(to right, transparent,white 5% 95%,transparent);
+    padding: 2rem 5%;
+    box-sizing: border-box;
     margin: auto;
     border-bottom: 1px solid #666;
 }
