@@ -28,7 +28,7 @@
                     <p class="pwdInfo" v-text="pwdInfo_text"></p>
                 </div>
                 <p>
-                    <button type="button" @click="sign_1" :disabled="!btnDbl">확인</button>
+                    <button class="yesbtn" type="button" @click="sign_1" :disabled="!btnDbl">확인</button>
                 </p>
             </div>
 
@@ -372,5 +372,16 @@ const inputMotion = function(){
 }
 .signpage_1 > div{
     margin-bottom: 2rem;
+}
+.yesbtn {
+    font: 100%;
+    border: 0;
+    background-color: #e0e0e0;
+    padding: 0.6em 1em;
+    border: 1em;
+    transition: .3s ease;
+}
+.yesbtn:hover {
+    background-color: #a0a0a0;
 }
 </style>

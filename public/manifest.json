@@ -1,17 +1,27 @@
 {
-    "name": "cheezz",
-    "short_name" : "Vue PWA project",
+    "name": "CHEEZS",
+    "short_name" : "CHEEZS",
     "icons": [
         {
-            "src" : "./img/icons/favicon-16x16.png",
+            "src" : "./img/icons/main-icon-16x16.png",
             "type": "image/png",
             "sizes": "16x16",
             "purpose": "any"
         },
         {
-            "src" : "./img/icons/favicon-32x32.png",
+            "src" : "./img/icons/main-icon-32x32.png",
             "type": "image/png",
             "sizes": "32x32",
+            "purpose": "any"
+        },{
+            "src" : "./img/icons/main-icon-192x192.png",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any"
+        },{
+            "src" : "./img/icons/main-icon-512x512.png",
+            "type": "image/png",
+            "sizes": "512x512",
             "purpose": "any"
         }
     ],

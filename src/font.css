@@ -112,7 +112,20 @@
 }
 
 body {
-    font-family: 'Noto Sans KR','Orbit', 'Inter', 'Oswald', 'Sans serif';
+    font-family: 'NanumBarunGothic','Orbit', 'Inter', 'Oswald', 'Sans serif';
     font-weight: normal;
     font-size: max(12px, 0.8vw);
 }
+
+/* 
+font-family: 'NanumBarunGothicExtraLight';
+font-family: 'NanumBarunGothicLight';
+font-family: 'NanumBarunGothic';
+font-family: 'NanumBarunGothicBold';
+
+font-family: 'NanumSquareNeoLight';
+font-family: 'NanumSquareNeo';
+font-family: 'NanumSquareNeoBold';
+font-family: 'NanumSquareNeoExtraBold';
+font-family: 'NanumSquareNeoHeavy';
+*/

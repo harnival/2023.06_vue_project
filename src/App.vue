@@ -1,7 +1,7 @@
 <template>
   <div class="loadingPage" v-if="store.getters.getSetLoading">
     <div>
-      <img src="./assets/img/main-icon-fill2.png">
+      <img src="./assets/main-icon-512x512.png">
       <strong>CHEEZS</strong>
     </div>
   </div>
@@ -111,24 +111,24 @@ const slideAccount = function(){
   }
 }
 // nav에 플레이리스트 //
-let myPlaylist = reactive({});
-let listState = ref(true)
-const form = reactive({
-    account : store.getters.getAccount,
-    playlists : store.getters.getDataPlaylists
-})
-watch(() => [form.account, form.playlists], (cur) => {
-    if (cur[0]) {
-        if (!cur[0]['playlist']){
-            listState.value = false
-        } else {
-            listState.value = true
-            for(const key in cur[0]['playlist']) {
-                myPlaylist[key] = cur[1][key]
-            }
-        }
-    }
-},{immediate: true, deep: true})
+// let myPlaylist = reactive({});
+// let listState = ref(true)
+// const form = reactive({
+//     account : store.getters.getAccount,
+//     playlists : store.getters.getDataPlaylists
+// })
+// watch(() => [form.account, form.playlists], (cur) => {
+//     if (cur[0]) {
+//         if (!cur[0]['playlist']){
+//             listState.value = false
+//         } else {
+//             listState.value = true
+//             for(const key in cur[0]['playlist']) {
+//                 myPlaylist[key] = cur[1][key]
+//             }
+//         }
+//     }
+// },{immediate: true, deep: true})
 // account menu 이동 //
 const goAccount = function(){
   oRouter.push({ name: 'account', params : { ids : useAuth.currentUser.uid}})

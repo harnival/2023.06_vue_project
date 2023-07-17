@@ -142,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref ,reactive, watch, computed} from 'vue';
+import { ref ,reactive, watch} from 'vue';
 import { useDatabase , useAuth} from '../datasources/firebase';
 import { ref as dataRef, get, update } from 'firebase/database';
 import { useStore } from 'vuex';
@@ -162,12 +162,15 @@ watch(() => [form.account, form.playlists], (cur) => {
         if (!cur[0]['playlist']){
             listState.value = false
         } else {
-            listState.value = true
-            for( const key in cur[0]['playlist']) {
-                if(cur[1].playlist){
-                    myPlaylist[key] = cur[1][key]
+            listState.value = true;
+            const q = Object.keys(cur[0].playlist);
+            console.log(q)
+            for ( const val of q ){
+                if (cur[1][val]) {
+                    myPlaylist[val] = cur[1][val]
                 }
-            }
+            }            
+            
         }
     }
 },{immediate: true, deep: true})
@@ -293,6 +296,7 @@ const editList = function(key){
             linear-gradient(240deg, transparent,red),
             linear-gradient(45deg, transparent,yellow);
         padding-top: var(--main-top-padding) ;
+        min-height: 100vh;
         
     }
     .section {
@@ -357,7 +361,6 @@ const editList = function(key){
             left: 0;
             width: 100%;
             color: white;
-            text-shadow: 1px 0px 5px white;
         }
         .sec_title h3 {
             font-family: 'NanumSquareNeoBold';
@@ -519,7 +522,7 @@ const editList = function(key){
             gap: 1rem;
         }
         .sec1_l_t_tag li {
-            background-color: rgb(255,210,11);
+            background-color: #ffd20b;
             padding: 0 1em;
             border-radius: 0.5em;
         }
@@ -528,7 +531,7 @@ const editList = function(key){
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
+            color: #262626        }
     
         .hash_title {
             display: flex;

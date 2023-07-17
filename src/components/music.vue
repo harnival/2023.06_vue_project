@@ -1,138 +1,154 @@
 <template>
     <div id="musicBox">
         <div id="youtubePlayer"></div>
-        <div class="searchBox">
-            <div class="sb_inputWrap">
-                <input type="text" v-model="searchs" placeholder="제목 또는 아티스트 명을 입력하세요." @focusin="inputFocus" @focusout="inputFocusOut">
-                <div class="focusLine"></div>
-                <button class="sb_btn" @click="getId">검색</button>
+        <div class="musicBoxWrap">
+            <div class="searchBox">
+                <div class="sb_inputWrap">
+                    <div class="focusLine"></div>
+                    <div class="inputBox_sb">
+                        <input type="text" v-model="searchs" placeholder="제목 또는 아티스트 명을 입력하세요." @focusin="inputFocus" @focusout="inputFocusOut">
+                        <button class="sb_btn" @click="getId">검색</button>
+                    </div>
+                </div>
             </div>
+            
+            <ul class="musicList_wrap">
+                <li class="ml_empty" v-if="emptyResult">
+                    <p>검색 결과가 없습니다.</p>
+                </li>
+                <li class="musicList" v-for="item in videos" :key="item.id">
+                    <div :id="'player_'+item.id"></div>
+                    <div class="ml_img_wrap">
+                        <div class="ml_img">
+                            <img class="ml_i_album" :src="item.thumbnail" alt="">
+                            <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
+                                <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
+                                <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml_text_wrap">
+                        <div class="ml_text">
+                            <h5 class="ml_title">{{ item.title }}</h5>
+                            <p class="ml_artist">{{ item.artist }}</p>
+                        </div>
+                        <div class="ml_player">
+                            <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
+                                <div class="bar_line"></div>
+                            </div>
+                            <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">
+                                <span v-if="videoCalled==item.id">
+                                    {{ Math.floor(nowTime/60) <10? '0'+Math.floor(nowTime/60) : Math.floor(nowTime/60) }}:
+                                    {{ nowTime%60 < 10? '0'+nowTime%60 : nowTime%60}}
+                                </span>
+                            </p>
+                            <p class="nl_p_duration">
+                                {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
+                                {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ml_menu">
+                        <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
+                        <div class="ml_m_mylist" v-if="openAddPop == item.id">
+                            <ul>
+                                <li>+ 새 플레이리스트 만들기</li>
+                                <li v-for="lists in userPlaylist" >
+                                    <a href="/" @click.prevent="addToList(lists[0],item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
+                    </div>
+                </li>
+            </ul>
+    
+            <ul class="popularMusicList" v-if="popularText">
+                <li  class="popularTextLi"> # 인기 급상승 </li>
+                <li v-for="(item,index) in popularVideos" :key="item.id" class="musicList">
+                    <div :id="'popularPlayer_'+item.id"></div>
+    
+                    <div class="ml_img_wrap">
+                        <div class="ml_img">
+                            <img class="ml_i_album" :src="item.thumbnail" alt="">
+                            <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id,item.duration)">
+                                <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
+                                <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
+                            </div>
+                        </div>
+                    </div>
+    
+                    <div class="ml_text_wrap">
+                        <div class="ml_text">
+                            <h5 class="ml_title">{{ item.title }}</h5>
+                            <p class="ml_artist">{{ item.artist }}</p>
+                        </div>
+                        <div class="ml_player">
+                            <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
+                                <div class="bar_line"></div>
+                            </div>
+                            <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">
+                                {{ Math.floor(nowTime/60) <10? '0'+Math.floor(nowTime/60) : Math.floor(nowTime/60) }}:
+                                {{ nowTime%60 < 10? '0'+nowTime%60 : nowTime%60}}
+                            </p>
+                            <p class="nl_p_duration">
+                                {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
+                                {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ml_menu">
+                        <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
+                        <div class="ml_m_mylist" v-if="openAddPop == item.id">
+                            <ul>
+                                <li>+ 새 플레이리스트 만들기</li>
+                                <li v-for="lists in userPlaylist" >
+                                    <a href="/" @click.prevent="addToList(lists,item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
+                    </div>
+                </li>
+            </ul>
         </div>
-        
-        <ul class="musicList_wrap">
-            <li class="ml_empty" v-if="emptyResult">
-                <p>검색 결과가 없습니다.</p>
-            </li>
-            <li class="musicList" v-for="item in videos" :key="item.id">
-                <div :id="'player_'+item.id"></div>
-                <div class="ml_img_wrap">
-                    <div class="ml_img">
-                        <img class="ml_i_album" :src="item.thumbnail" alt="">
-                        <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
-                            <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
-                            <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
-                            <!-- <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0"> -->
-                        </div>
-                    </div>
-                </div>
-                <div class="ml_text_wrap">
-                    <div class="ml_text">
-                        <h5 class="ml_title">{{ item.title }}</h5>
-                        <p class="ml_artist">{{ item.artist }}</p>
-                    </div>
-                    <div class="ml_player">
-                        <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
-                            <div class="bar_line"></div>
-                        </div>
-                        <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">00:00</p>
-                        <p class="nl_p_duration">
-                            {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
-                            {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
-                        </p>
-                    </div>
-                </div>
-                <div class="ml_menu">
-                    <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
-                    <div class="ml_m_mylist" v-if="openAddPop == item.id">
-                        <ul>
-                            <li>+ 새 플레이리스트 만들기</li>
-                            <li v-for="lists in userPlaylist" >
-                                <a href="/" @click.prevent="addToList(lists[0],item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
-                </div>
-            </li>
-        </ul>
-
-        <ul class="popularMusicList" v-if="popularText">
-            <li  class="popularTextLi"> # 인기 급상승 </li>
-            <li v-for="item in popularVideos" :key="item.id" class="musicList">
-                <div :id="'popularPlayer_'+item.id"></div>
-
-                <div class="ml_img_wrap">
-                    <div class="ml_img">
-                        <img class="ml_i_album" :src="item.thumbnail" alt="">
-                        <div class="ml_i_cover" data-play="play" @click="clickToMusicPlay(item.id)">
-                            <img class="ml_i_play"  src="../assets/img/play.svg" alt="play" v-if="videoCalled != item.id || playState != 1">
-                            <img class="ml_i_pause"  src="../assets/img/pause.svg" alt="pause" v-if="videoCalled == item.id && playState == 1">
-                            <!-- <img class="ml_i_replay"  src="../assets/img/replay.svg" alt="replay" v-if="videoCalled == item.id && playState == 0"> -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ml_text_wrap">
-                    <div class="ml_text">
-                        <h5 class="ml_title">{{ item.title }}</h5>
-                        <p class="ml_artist">{{ item.artist }}</p>
-                    </div>
-                    <div class="ml_player">
-                        <div :class="{ ml_p_bar : true, ml_p_active : videoCalled == item.id}">
-                            <div class="bar_line"></div>
-                        </div>
-                        <p :class="{ml_p_current : true, ml_p_active : videoCalled == item.id}">00:00</p>
-                        <p class="nl_p_duration">
-                            {{ item.duration[0] < 10? '0'+item.duration[0] : item.duration[0] }} : 
-                            {{ !item.duration[1]? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
-                        </p>
-                    </div>
-                </div>
-                <div class="ml_menu">
-                    <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
-                    <div class="ml_m_mylist" v-if="openAddPop == item.id">
-                        <ul>
-                            <li>+ 새 플레이리스트 만들기</li>
-                            <li v-for="lists in userPlaylist" >
-                                <a href="/" @click.prevent="addToList(lists[0],item)">{{ store.getters.getDataPlaylists[lists[0]].title }}</a>
-                            </li>
-                        </ul>
-                    </div>
-                    <button type="button" class="ml_m_search">해당 곡이 들어간 플레이리스트 검색</button>
-                </div>
-            </li>
-        </ul>
     </div>
 </template>
 
 <script setup>
-import Youtube from './youtube.vue'
+// ============================= import ========================================
 import axios from 'axios';
 import {ref as dataRef, get, child, update} from 'firebase/database';
 import {useDatabase, useAuth} from '../datasources/firebase.js'
-import { onMounted, ref, reactive, watch , computed, onBeforeMount} from 'vue';
+import { onMounted, ref, reactive, watch , computed, onBeforeMount, onUpdated} from 'vue';
 import { useStore } from 'vuex';
     const store = useStore();
-let player;
-// common ------------------------------------------------------------------
-const inputFocus = () => {
+    
+// ================================= varient ===================================
+    let player; // 유튜브 iframe 컨테이너
+    let videos = ref([]);   // 검색한 비디오 array
+    let popularVideos = ref([]);    // 인기 순위 array
+    let APIkey = ref('');   // 유튜브 API key
+    let searchs = ref('');  // 검색창 입력값
+    let popularText = ref(true);    // 인기 리스트 온오프
+    let emptyResult = ref(false);   // 결과가 없을 시 안내 문구 출력 온오프
+    let openAddPop = ref('');   // 플레이리스트 추가 창 온오프
+    let userPlaylist = reactive([]);    //currentUser 의 플레이리스트를 playlists 디렉토리에서 호출( array )
+
+// ================================= function ===================================
+const inputFocus = () => {  // 검색창 focusin 시 반응
     const q1 = document.querySelector(".focusLine");
     const q2 = document.querySelector(".sb_btn");
     q1.style.width = '100%';
     q2.style.borderColor = '#A60A27';
 }
-const inputFocusOut = () => {
+const inputFocusOut = () => {   // 검색창 focusouy 시 반응
     const q1 = document.querySelector(".focusLine");
     const q2 = document.querySelector(".sb_btn");
     q1.style.width = '0%';
     q2.style.borderColor = '#aaaaaa';
 }
-// API key 받아오기 ----------------------------------------------- //
-let APIkey = ref('');
-// functions ----------------------------------------------------------------
-    // 첫 로딩 시 인기 음악 정렬 //
-const mo = async function(APIkeys){
-    // database에 업로드 함수 //
+const mo = async function(APIkeys){ // 인기순위 정보 호출
     popularText.value = true;
     const set = function(datas){
         const updates = {};
@@ -140,7 +156,6 @@ const mo = async function(APIkeys){
         update(dataRef(useDatabase),updates);
         return datas
     }
-
     const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
         params: {
             part: 'snippet, contentDetails',
@@ -154,7 +169,6 @@ const mo = async function(APIkeys){
         }
     });
     const dataArr2 = await res.data.items.filter( item => item.snippet.description.includes('Provided to YouTube by'))
-    console.log('[인기 음악 목록]',dataArr2)
     const dataArr = await dataArr2.map(item => ({
             id: item.id,
             title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
@@ -166,8 +180,7 @@ const mo = async function(APIkeys){
     const q = await set(dataArr);
     popularVideos.value = await q
 }
-    // 날짜 설정 //
-const dateSetting = function(){
+const dateSetting = function(){ // 갱신 날짜 지정 위해 현재날짜 저장
     const currentDate = Date.now();
     const lastSearchTime =store.getters.getDataMusicSearch['lastSearchTime']? new Date(store.getters.getDataMusicSearch['lastSearchTime']) : new Date(0);
     if ( currentDate >= new Date(lastSearchTime.getFullYear(), lastSearchTime.getMonth(), lastSearchTime.getDate()+1,0,0) ){
@@ -180,8 +193,7 @@ const dateSetting = function(){
 }
 
 // ===================================================================
-let videos = ref([]);
-let popularVideos = ref([]);
+
 
 onMounted(function(){
     // Youtube API key 호출 //
@@ -190,33 +202,21 @@ onMounted(function(){
         dateSetting(); // 날짜설정 호출
         const data = snapshot.val();
         APIkey.value = data;
-        return data;
+        return data;    // 유튜브 API key
     })
     .then(data => {
-        const popular = store.getters.getDataMusicSearch['popular'];
+        onYouTubeIframeAPIReady();  // 유튜브 iframe 생성
+        const popular = store.getters.getDataMusicSearch['popular'];    // 인기순위 호출 or 저장소 호출
         if( !popular ) {
             mo(data);
         } else {
             popularVideos.value = popular;
-            console.log('[popular music] get stored data')
         }
-        onYouTubeIframeAPIReady();
-        return player
-    }).then((player) => {
-        watch(() => player.getCurrentTime(), cur => {
-            console.log(cur)
-        },{immediate:true,deep:true})
     })
     
     
 })
-
-// 검색 제출 시 내용 도출 //
-let searchs = ref('');
-let popularText = ref(true);    // 인기 리스트 출력
-let emptyResult = ref(false);   // 결과가 없을 시 안내 문구 출력
-console.log(store.getters.getDataMusicSearch)
-async function getId(){
+async function getId(){ // 검색 시 데이터 호출
     const searchData = store.getters.getDataMusicSearch['search'];
     if( !searchs.value ) {
         mo(APIkey.value);
@@ -258,15 +258,13 @@ async function getId(){
                     return response.data.items[0].contentDetails.duration;
             });
         
-            Promise.all(durationPromises).then(durations => {
+            Promise.all(durationPromises).then(durations => {   // 재생옥록 
                 dataArr.forEach((item, index) => {
                     item.duration = durations[index].match(/[0-9]+/g);
                 })
             }).then(res => {
                 videos.value = dataArr;
                 store.commit('storeSearching',dataArr);
-                console.log(videos.value);
-                console.log(dataArr);
             })
         }
 
@@ -277,21 +275,16 @@ async function getId(){
 }
 // ---------------------------------------------------------------------------
 // 클릭 이벤트 //
-    // 1. 플레이리스트 선택 창 열기
-let openAddPop = ref('');
-let userPlaylist = reactive({});
-// watch(()=> store.getters.getAccount, (cur) => {
-//     userPlaylist = cur.playlist;
-// },{immediate:true , deep:true})
 
-const clickAdd = function(key){
-    const q = Object.entries(store.getters.getAccount.playlist).reverse();
-    Object.assign(userPlaylist,q);
+const clickAdd = function(key){ // 플레이리스트에 곡 추가하기 위해 버튼 클릭 (key : account의 playlist 목록)
+    const q = Object.keys(Object.entries(store.getters.getAccount.playlist).reverse());
+    if(userPlaylist){
+        Object.assign(userPlaylist,q);
+    }  //----> 
    
-    openAddPop.value = openAddPop.value == key? null : key;
+    openAddPop.value = openAddPop.value == key? null : key; // 해당 key를 가진 element만 열림
 }
-    // 2. 플레이리스트 선택
-const addToList = function(key,item){
+const addToList = function(key,item){   // 해당 음악을 playlist 디렉토리에 추가 (key : platlist디렉토리 키, item : 음악 정보)
     const updateToMine = {};
         updateToMine[`playlists/${key}/tracks/${item.id}`] = item;
     update(dataRef(useDatabase),updateToMine);
@@ -303,16 +296,27 @@ const addToList = function(key,item){
 
 let playState = ref(-1)
 let videoCalled = ref(null);
-let playTime = ref(0);
-const clickToMusicPlay = function(currentId){
-     if( videoCalled.value != currentId ) {
+let musicTime = ref(0);
+let nowTime = ref(0)
+const setPlayTime = function(){
+    return setInterval(function(){
+        const time = Math.floor(player.getCurrentTime()); 
+        if(nowTime.value !== time){
+            nowTime.value = time
+        }
+    },1000)
+}
+
+const clickToMusicPlay = function(currentId,duration){
+    musicTime.value = 60 * duration[0] + 1* duration[1];
+    if( videoCalled.value != currentId ) {
         player.loadVideoById(currentId);
         videoCalled.value = currentId;
     } else if ( player.getPlayerState() == 1 ){
         player.pauseVideo();
     } else {
-        player.playVideo()        
-     }
+        player.playVideo();
+    }
 }
 
     // 초기 영상 로드 //
@@ -329,23 +333,42 @@ function onYouTubeIframeAPIReady() {
     })
     store.commit('setSetLoading',false)
 }
+
 function stateChange(event) { // 플레이어 상태 변화 실시간 입력
     playState.value = event.data;
-    
+    clearInterval(setPlayTime)
 }
 function onPlayerReady(event) {
     event.target.pauseVideo();
+    setPlayTime()
 }
-var done = false;
+
+//재생시간
+const qqqqq = function(id){
+
+}
+watch(() => videoCalled.value, cur => {
+})
+
 </script>
 
 <style scoped>
 #musicBox {
-    padding-top: var(--header-height);
-    background-color: rgb(0,0,0,0.8);
+    background:
+        linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
+            linear-gradient(240deg, transparent,red),
+            linear-gradient(45deg, transparent,yellow);
+        min-height: 100vh;
+}
+.musicBoxWrap {
+    width: 80%;
+    max-width: 1280px;
+    margin: auto;
+    background-color: rgba(0, 0, 0, 0.61);
+    min-height: 100vh;
+    padding: 5vh 2rem;
 }
 .popularMusicList {
-    background-color: black;
     padding: 0;
     position: relative;
 }
@@ -354,6 +377,9 @@ var done = false;
     position: absolute;
     bottom: 100%;
     left: 0;
+    color:white;
+    font-family: 'NanumSquareNeoBold';
+    font-size: 150%;
 }
 .musicList_wrap {
     width: 70%;
@@ -367,11 +393,12 @@ var done = false;
     gap: 1rem;
     width: 100%;
     height: max(18vh, 8rem);
-    background: linear-gradient(to right, transparent,white 5% 95%,transparent);
+    background-color: white;
     padding: 2rem 5%;
     box-sizing: border-box;
     margin: auto;
     border-bottom: 1px solid #666;
+    border-radius: 2rem;
 }
 .ml_img_wrap {
     height: 100%;
@@ -459,12 +486,17 @@ var done = false;
 .ml_p_bar.ml_p_active {
     width: 70%
 }
+.bar_line {
+    background-color: #A60A27;
+    height: 100%;
+}
 .ml_p_current {
     width: 0em;
     overflow: hidden;
     display: flex;
     justify-content: start;
     transition: .5s ease-in-out;
+    word-break: keep-all;
 }
 .ml_p_current.ml_p_active {
     width: 3em;
@@ -551,11 +583,15 @@ var done = false;
     position: relative;
     display: flex;
     justify-content: center;
-
-    padding-bottom: 3rem;
+    box-sizing: border-box;
+    border-radius: 2rem;
+    background-color: white;
+    margin: 10% auto;
+    padding: 1rem 0;
+    height: fit-content;
 }
 .sb_inputWrap {
-    width: 50%;
+    width: 80%;
     position: relative;
 }
 .searchBox input {
@@ -566,6 +602,10 @@ var done = false;
     border: 0;
     border-bottom: 2px solid #aaa;
     outline: none;
+    z-index: 8000;
+}
+.inputBox_sb {
+    z-index: 8000;
 }
 .focusLine {
     position: absolute;

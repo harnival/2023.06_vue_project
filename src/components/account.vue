@@ -23,17 +23,17 @@
                 </div>
             </div>
             <div class="a_p_btns" >
-                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">프로필 수정</a>
+                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" class="a_p_btn_edit">프로필 수정</a>
                 <div v-if="route.params.ids != 'my' && route.params.ids != useAuth.currentUser.uid">
-                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.follower ||!accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우</a>
+                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.follower ||!accountInfo.follower[`${useAuth.currentUser.uid}`]" class="a_p_btn_follow">팔로우</a>
                     <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.follower && accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
                 </div>
             </div>
         </div>
+
         <div class="a_playlist">
             <div class="a_pl_title">
                 <h3>내 플레이리스트</h3>
-                <p><button type="button" @click.prevent="listtype = true"> 더보기</button></p>
             </div>
             <div class="a_playlistWrap">
                 <div class="a_pl_nolist" v-if="!plState">
@@ -46,7 +46,7 @@
                         <div class="a_pl_btns" v-if="!makeListPage">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>
-                        <div class="a_pl_makeList">
+                        <div class="a_pl_makeList" v-else>
                             <form @submit.prevent="saveMakeList">
                                 <div class="a_pl_m_cover" @click="openFile">
                                     <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
@@ -59,25 +59,28 @@
                                         </p>
                                     </div>
                                 </div>
-                                <div class="a_pl_m_text">
-                                    <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
-                                </div>
-                                <div class="a_pl_m_tag">
-                                    <div class="a_pl_m_tag_inputwrap">
-                                        <input type="text" @change="addTag" placeholder="#">
-                                        <a href="/" @click.prevent="addTag">해시태그 추가</a>
+                                <div class="a_pl_m_textWrap">
+                                    <div class="a_pl_m_text">
+                                        <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
                                     </div>
-                                    <ul>
-                                        <li v-for="(item,key) in playlistContent.tag" :key="index">
-                                            #{{ key }}
-                                            <a href="/" @click.prevent="removeTag(index)"></a>
-                                        </li>
-                                    </ul>
+                                    <div class="a_pl_m_tag">
+                                        <p>#태그 추가</p>
+                                        <div class="a_pl_m_tag_inputwrap">
+                                            <input type="text" @change="addTag" placeholder="#">
+                                            <a href="/" @click.prevent="addTag">해시태그 추가</a>
+                                        </div>
+                                        <ul>
+                                            <li v-for="(item,key) in playlistContent.tag" :key="index">
+                                                #{{ key }}
+                                                <a href="/" @click.prevent="removeTag(index)"></a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="a_pl_m_btn">
+                                        <button type="submit" class="a_pl_m_btn_submit">생성하기</button>
+                                    </div>
                                 </div>
-                                <div class="a_pl_m_btn">
-                                    <button type="submit">생성하기</button>
-                                    <button type="button" @click="">취소</button>
-                                </div>
+                                <button type="button" @click="cancelMake" class="a_pl_m_cancel">취소</button>
                             </form>
                         </div>
                     </li>
@@ -89,24 +92,26 @@
                                 <button type="button" @click.prevent="router.push({name : 'player', params : {listkey : item[0]}})">플레이리스트 재생</button>
 
                             </div>
-                            <div class="a_pl_l_title">
-                                <p >{{ item[1].title }}</p>
-                                <div v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
-                                    <button type="button" @click="clickOpen(item[0])">메뉴</button>
-                                    <div class="sec1_title_menu" v-if="openMenuPop == item[0]">
-                                        <a href="/" @click.prevent>수정</a>
-                                        <a href="/" @click.prevent>삭제</a>
+                            <div class="a_pl_l_content">
+                                <div class="a_pl_l_title">
+                                    <p >{{ item[1].title }}</p>
+                                    <div v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
+                                        <button type="button" @click="clickOpen(item[0])">메뉴</button>
+                                        <div class="sec1_title_menu" v-if="openMenuPop == item[0]">
+                                            <a href="/" @click.prevent>수정</a>
+                                            <a href="/" @click.prevent>삭제</a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="a_pl_l_text">
-                                <p>{{ accountInfo.name }}</p>
-                                <p>{{ item[1].totalLength? item[1].totalLength : '--' }}</p>
-                            </div>
-                            <div class="a_pl_l_tag">
-                                <ul>
-                                    <li v-for="(tags,tagkey) in item[1].tag"># {{ tagkey }}</li>
-                                </ul>
+                                <div class="a_pl_l_text">
+                                    <span>총 {{item[1].tracks? Object.entries(item[1].tracks).length : 0 }}곡</span>
+                                    <span>{{  totalLength(item[1].tracks) }}</span>
+                                </div>
+                                <div class="a_pl_l_tag">
+                                    <ul>
+                                        <li v-for="(tags,tagkey) in item[1].tag"># {{ tagkey }}</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </li> 
@@ -133,6 +138,7 @@ import { useDatabase, useAuth } from '../datasources/firebase.js';
 let pageUser = ref(''); // 현재 페이지의 유저
 let accountInfo = reactive({}); // 페이지 유저 정보
 let plState = ref(null) // 플레이리스트 존재 유무
+
 watch(() => route.params.ids, (cur) => {
     if( cur == 'my' ) {
         pageUser.value = useAuth.currentUser.uid;
@@ -166,9 +172,13 @@ watch(() => [form.account, form.playlists], (cur) => {
             plState.value = false
         } else {
             plState.value = true
-            for( const key in cur[0]['playlist']) {
-                myPlaylist[key] = cur[1][key]
-            }
+            const q = Object.keys(cur[0].playlist);
+            console.log(q)
+            for ( const val of q ){
+                if (cur[1][val]) {
+                    myPlaylist[val] = cur[1][val]
+                }
+            }     
         }
     }
 },{immediate: true, deep: true})
@@ -186,7 +196,6 @@ const makeList1 = function(){
     plState.value = true;
     makeList2();
 }
-
 const makeList2 = async function(){
     makeListPage.value = true;
     if(document.querySelector(".a_pl_list_new")){
@@ -291,12 +300,31 @@ const clickToDeleteFollow = function(){
         updates[`account/${myUid}/following/${uid}`] = null;
     update(dataRef(useDatabase),updates);
 }
+const totalLength = function(item){
+    if (!item) {
+        return '0초';
+    }
+    let n=0;
+    for ( const key in item) {
+        const q = item[key].duration[0] * 60 + item[key].duration[1] * 1;
+        n += q
+    }
+    const minutes = Math.floor(n/60);
+    const seconds = n%60;
+    const text = `${minutes}분 ${seconds}초`;
+    return text;
+}
 </script>
 
 <style scoped>
 #accountBox {
-    padding-top: var(--header-height);
-    background-color: rgb(0,0,0,0.9);
+    background:
+        linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
+            linear-gradient(240deg, transparent,red),
+            linear-gradient(45deg, transparent,yellow);
+        padding-top: var(--main-top-padding) ;
+        min-height: 100vh;
+        box-sizing: border-box;
 }
     .a_profile {
         display: flex;
@@ -304,14 +332,42 @@ const clickToDeleteFollow = function(){
         max-width: 1280px;
         margin: auto;
         background-color: var(--main-color1);
+        border-radius: 1rem;
+        padding: 2rem 8%;
+        box-sizing: border-box;
+        position: relative;
     }
     .a_p_content {
         display: flex;
+        width: 80%;
+    }
+    .a_p_btns {
+        position: absolute;
+        top: 2rem;
+        right: 5%;
+    }
+    .a_p_btn_edit {
+        font-size: 0px;
+        display: block;
+        width: 1.5rem;
+        aspect-ratio: 1/1;
+        background: url('../assets/img/pencil.svg') no-repeat center/contain;
+    }
+    .a_p_btn_edit:hover {
+        opacity: 0.8;
+        border-bottom: 1px solid rgb(0,0,0,0.6);
+    }
+    .a_p_btn_follow {
+        display: block;
+        font-size: 100%;
+        padding: 0.5em 1em;
+        border: 1px solid #a60a27;
+        border-radius: 1em;
     }
     .a_p_c_image {
         width: max(100px, 10vw);
         aspect-ratio: 1/1;
-        border: 1px solid black;
+        border: 1px solid rgba(0, 0, 0, 0.3);
         border-radius: 50%;
         overflow: hidden;
         display: flex;
@@ -324,18 +380,26 @@ const clickToDeleteFollow = function(){
     }
     .a_p_c_text {
         display: block;
+        padding-left: 2rem;
     }
     .a_p_c_n_name {
-        font-size: 100%;
+        font-size: 150%;
         margin-right: 3rem;
     }
+    .a_p_c_name {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        gap: 1rem;
+    }
     .a_p_c_n_id {
-        font-size: 80%;
-        color: #666;
+        font-size: 100%;
+        color: #000000b7;
     }
     .a_p_c_follow {
         display: flex;
         gap: 2rem;
+        padding: 3rem 0;
     }
     .a_p_c_follow > div > span:first-child {
         font-weight: 600;
@@ -345,25 +409,25 @@ const clickToDeleteFollow = function(){
     /* 2.playlist------------------------------------------------ */
     .a_playlist {
         display: block;
+        width: 80%;
+        margin: auto;
+        padding-top: 5%;
     }
     .a_pl_title{
         display: flex;
         justify-content: space-between;
         align-items: center;
+        color: white;
+        font-size: 150%;
+        font-family: 'NanumSquareNeoBold';
     }
-    .a_pl_title button{
-        display: block;
-        border: 0;
-        padding-right: 2em;
-        background: transparent url('../assets/img/chevron-double-right.svg') no-repeat center right / contain;
-    }
-    .a_pl_title button:hover,
-    .a_pl_title button:focus {
-        opacity: 0.7;
-    }
+   
     .a_playlistWrap {
-        height: 45vh;
         position: relative;
+        border-radius: 1rem;
+        background-color: rgba(255, 255, 255, 0.63);
+        padding: 1rem;
+        box-sizing: border-box;
     }
     .a_pl_nolist {
         width: 100%;
@@ -380,7 +444,6 @@ const clickToDeleteFollow = function(){
         flex-wrap: wrap;
     }
     .a_pl_list {
-        background-color: #eee;
         height: 100%;
     }
     .a_pl_newlist1 {
@@ -393,10 +456,7 @@ const clickToDeleteFollow = function(){
     .a_pl_list {
         width: calc(100% / 4);
         box-sizing: border-box;
-        min-height: 45vh;
-    }
-    .a_pl_list_wrap {
-        background-color: #f0f0fd;
+        min-height: 40vh;
     }
     .a_pl_list_new a {
         display: flex;
@@ -420,15 +480,11 @@ const clickToDeleteFollow = function(){
     }
     .a_pl_listWrap {
         margin: 1rem;
-        background-color: #eee;
         transition: .2s ease;
-        border-radius: 2rem;
-        overflow: hidden;
         padding-bottom: 2rem;
     }
     .a_pl_listWrap:hover{
         transform: scale(1.02,1.02);
-        background-color: #fff;
     }
     .a_pl_l_cover {
         aspect-ratio: 1/1;
@@ -439,6 +495,7 @@ const clickToDeleteFollow = function(){
         overflow: hidden;
         margin: 0 auto 1rem;
         position: relative;
+        border-radius: 2rem;
     }
     .a_pl_l_cover button {
         position: absolute;
@@ -456,22 +513,30 @@ const clickToDeleteFollow = function(){
     .a_pl_l_cover img {
         width: 100%;
     }
+    .a_pl_l_content {
+        background-color: white;
+        padding: 1rem;
+        box-sizing: border-box;
+        border-radius: 1rem;
+    }
     .a_pl_l_text {
         display: flex;
         justify-content: space-between;
-    }
-    .a_pl_l_text p:last-child {
-        text-align: end;
-        font-size: 80%;
         color: #666;
+        font-size: 90%;
+        padding: 1rem 2rem;
     }
+   
     .a_pl_l_title {
         display: flex;
         justify-content: space-between;
+        font-size: 100%;
     }
     .a_pl_l_title > p {
         font-size: 120%;
         font-weight: 500;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
     .a_pl_l_tag ul {
         display: flex;
@@ -493,20 +558,53 @@ const clickToDeleteFollow = function(){
     .a_pl_makeList {
         padding: 1rem;
         box-sizing: border-box;
-        border: 2px dashed black;
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9200;
+        background-color: rgb(255,255,255,0.4);
+        backdrop-filter: blur(2px);
+    }
+    .a_pl_makeList form {
+        width: 50%;
+        height: 50%;
+        background-color: rgb(255,210,11,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5%;
+        border-radius: 1rem;
+        padding: 1rem;
+        box-sizing: border-box;
+        position: relative;
     }
     .a_pl_m_cover {
         background-color: #eee;
         border-radius: 2rem;
         overflow: hidden;
         aspect-ratio: 1/1;
-        width: 100%;
+        height: 80%;
         box-shadow: 1px 2px 5px 0px #bbb;
         cursor: pointer;
-        margin-bottom: 1rem;
         display: flex;
         justify-content: center;
         align-items: center;
+    }
+    .a_pl_m_textWrap {
+        width: 50%;
+        background-color: white;
+        height: 80%;
+        border-radius: 2rem;
+        padding: 3rem 0;
+        box-sizing: border-box;
+        box-shadow: 1px 2px 5px 0px #bbb;
+        position: relative;
     }
     .a_pl_m_c_image {
         display: block;
@@ -516,24 +614,45 @@ const clickToDeleteFollow = function(){
         border: 0;
         font-size: 90%;
         padding: 0.3em 2em 0.3em 1em;
-        background-color: transparent;
         transition: .3s ease;
         outline: none;
         margin: 0;
         overflow: hidden;
     }
-    .a_pl_m_text input:focus,
+    .a_pl_m_text input {
+        height: 2rem;
+        border: 1px solid white;
+        background-color: #e0e0e0;
+        border-radius: 1rem;
+        width: 70%;
+    }
+    .a_pl_m_tag input {
+        background-color: #e0e0e0;
+    }
+    .a_pl_m_text input:focus{
+        background-color: rgba(166, 10, 39, 0.3);
+    }
+    .a_pl_m_tag {
+        padding: 2rem;
+        width: 70%;
+        margin: auto;
+    }
+    .a_pl_m_tag > p {
+        text-align: start;
+        padding-bottom: 0.2rem;
+    }
     .a_pl_m_tag input:focus {
         background-color: rgba(255,255,255,0.4);
     }
     .a_pl_m_tag_inputwrap {
-        background-color: rgba(35,26,144,0.3);
+        background-color: rgba(166, 10, 39, 0.3);
         border-radius: 0.5em;
         position: relative;
         width: fit-content;
         overflow: hidden;
         display: flex;
         align-items: center;
+        margin-bottom: 1rem;
     }
     .a_pl_m_tag_inputwrap a {
         position: absolute;
@@ -572,6 +691,10 @@ const clickToDeleteFollow = function(){
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        transition: .5s ease;
+    }
+    .a_pl_m_cover_before:hover {
+        background-color:#a60a2748;
     }
     #a_pl_m_coverInput {
         display: none;
@@ -580,7 +703,8 @@ const clickToDeleteFollow = function(){
         text-align: start;
         font-size: 80%;
         color: #333;
-        padding: 1em;
+        padding: 5%;
+        box-sizing: border-box;
     }
     .a_playerWrap {
         display: flex;
@@ -590,5 +714,35 @@ const clickToDeleteFollow = function(){
     }
     .a_pr_textPart {
         width: 50%;
+    }
+    .a_pl_m_btn {
+        position: absolute;
+        bottom: 2rem;
+        left: 0;
+        width: 100%;
+    }
+    .a_pl_m_btn button {
+        border: 0;
+        font-size: 100%;
+        padding: 0.5em 3em 0.5em 1em;
+        float: right;
+        margin-right: 2rem;
+        background: transparent url('../assets/img/chevron-double-right.svg') no-repeat center right 1em / 20%;
+        border-radius: 1rem;
+        transition: 3.s ease;
+    }
+    .a_pl_m_btn_submit:hover {
+        background-color: #e0e0e0;
+    }
+    .a_pl_m_cancel {
+        position: absolute;
+        top: 0.5rem;
+        left: 1rem;
+        width: 3rem;
+        aspect-ratio: 1/1;
+        font-size: 0;
+        border: 0;
+        border-radius: 50%;
+        background: url('../assets/img/arrow_back_3.png') no-repeat center / 100% 70%;
     }
 </style>
