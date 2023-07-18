@@ -6,7 +6,10 @@
                 <div class="pr_mediaWrap" @mouseenter="show=true" @mouseleave="show=false">
                     <Transition>
                         <div class="pr_title" v-show="show">
-                            <p class="pr_t_title">{{ listInfo.title }}</p>
+                            <p class="pr_t_title">
+                                <button type="button" class="goBackBtn">뒤로가기</button>
+                                <span>{{ listInfo.title }}</span>
+                            </p>
                             <p class="pr_t_maker">
                                 <div class="pr_t_avatar">
                                     <img :src="listInfo.maker_photoURL">
@@ -85,7 +88,9 @@
     // --------------------------------------------------------//
     let listInfo = reactive({});    //해당 플레이리스트의 총 정보
     let tracksArr = ref([]);    // 해당 플레이리스트의 트랙 정보
-
+    let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
+    let nowTime = ref(0)       // 현재 곡 재생시간(초)
+    let nowTotal = ref(0)       // 현재 곡의 총 길이(초)
     onBeforeMount(function(){
         // 템플릿 로드 전 정보 설정 --> 
         const playlistKey = route.params.listkey; //플레이리스트 고유 키
@@ -107,6 +112,8 @@
         })
 
     })
+
+
     const clickValue = reactive({});
     onMounted(function(){
         if (!player){
@@ -116,15 +123,34 @@
         const ball = document.querySelector(".ball")
         ball.addEventListener('mousedown',function(event){
             clickValue['click'] = true;
+            
         })
         window.addEventListener('mouseup',function(){
             clickValue['click'] = false;
+            if(!X && !Y) {
+                X=0;
+                Y=0;
+
+            }
         })
+        let X=0,Y=0;
         window.addEventListener('mousemove',function(event){
+            const mx = event.movementX;
+            const my = event.movementY;
+            X += mx;
+            Y += my;
+            if(clickValue['click']){
+                if(nowTime.value < nowTotal/2){
+                    if((mx<0 && my<0)||(mx>0&&my>0)){
+                        nowTime += mx
+                    }
+                } 
+            }
         })
         watch(() => clickValue['click'], cur => {
             console.log(cur)
         })
+
     })
     onBeforeUnmount(function(){
         if(player){
@@ -139,7 +165,7 @@
     let show = ref(false);
 
     // 재생시간 //
-    let nowTime = ref(0)
+    
     const set = function(){
         return setInterval(function(){
             const time = Math.floor(player.getCurrentTime()); 
@@ -153,7 +179,9 @@
         const ball = document.querySelector('.pr_np_ball');
         const [minutes , seconds] = tracksArr.value[nowPlayingInfo.value][1].duration;
         const totalTime = 60 * minutes + 1*seconds;
+        nowTotal.value = totalTime;
         const nowSet = 180 / totalTime;
+        deg.value = nowSet;
         if(cur == 0) {
             guage.style.transition = '';
             ball.style.transition = '';
@@ -531,5 +559,4 @@
     .p_list > ul > li {
         padding-top: 1rem;
     }
-    
 </style>

@@ -271,8 +271,8 @@ const saveMakeList = function(){
     
     const tagEntry = Object.entries(playlistContent.tag);
     tagEntry.forEach(v => {
-            const hashDb = dataRef(useDatabase, 'hashs/' + v[1])
-            push(hashDb,postkey2)
+            const hashDb = dataRef(useDatabase, `hashs/${v[1]}/${postkey2}`)
+            push(hashDb,true)
     })
     
 

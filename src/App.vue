@@ -21,27 +21,18 @@
               <div class="nav_a_name">{{ store.getters.getAccount.name }}</div>
             </div>
           </div>
-          <div class="nav_a_menu">
+          <div class="nav_a_menu drawing">
             <div class="nav_a_menuWrap">
               <ul>
                 <li><a href="/" @click.prevent="goHome">홈</a></li>
                 <!-- <li><a href="/" @click.prevent="goPlaylist">탐색</a></li> -->
                 <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
               </ul>
-              <hr/>
               <ul>
                 <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
                 <li><a href="/" @click.prevent="goSetting">설정</a></li>
                 <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
-              <hr>              
-              <!-- <p class="nav_a_menu_plTitle">내 플레이리스트</p>
-              <ul v-if="!listState">
-                <dd class="nav_a_menu_nolist"><p>플레이리스트가 없습니다.</p></dd>
-              </ul>
-              <ul v-if="listState">
-                <li v-for="item in myPlaylist">{{ item.title }}</li>
-              </ul> -->
             </div>
           </div>
         </div>
@@ -52,7 +43,6 @@
       </div>
     </header>
     <main>
-      
       <div class="mainWrap">
         <router-view></router-view>
       </div>
@@ -96,39 +86,15 @@ onBeforeMount(function(){
 
 // account 메뉴 슬라이드 클릭 이벤트 //
 const slideAccount = function(){
-  const navInfo = document.querySelector(".nav_a_info")
   const menu = document.querySelector(".nav_a_menu");
-  const infowrap = document.querySelector(".nav_a_info_wrap")
-  const w = infowrap.offsetWidth;
-  menu.classList.toggle('drawing');
-  infowrap.classList.toggle('drawing');
-  navInfo.classList.toggle('beforeClick')
-  menu.style.width = w + 'px'
+  menu.classList.toggle('drawing')
   if(menu.classList.contains('drawing')){
     menu.style.transform = `translateX(0px)`
   } else {
     menu.style.transform = `translateX(100%)`
   }
 }
-// nav에 플레이리스트 //
-// let myPlaylist = reactive({});
-// let listState = ref(true)
-// const form = reactive({
-//     account : store.getters.getAccount,
-//     playlists : store.getters.getDataPlaylists
-// })
-// watch(() => [form.account, form.playlists], (cur) => {
-//     if (cur[0]) {
-//         if (!cur[0]['playlist']){
-//             listState.value = false
-//         } else {
-//             listState.value = true
-//             for(const key in cur[0]['playlist']) {
-//                 myPlaylist[key] = cur[1][key]
-//             }
-//         }
-//     }
-// },{immediate: true, deep: true})
+
 // account menu 이동 //
 const goAccount = function(){
   oRouter.push({ name: 'account', params : { ids : useAuth.currentUser.uid}})
@@ -171,7 +137,7 @@ const goSetting = function(){
 :root {
   --inputwrap-label-bg: #f0f0fd;
   --main-color1:rgb(255, 210, 11);
-  --header-height: 6rem;
+  --header-height: 7vh;
   --main-top-padding: 13rem;
 }
 body {
@@ -183,7 +149,7 @@ header {
   top: 0;
   left: 0;
   width: 100%;
-  height: 0;
+  height: 0px;
   z-index: 8000;
 }
 ul,li {
@@ -288,20 +254,25 @@ label.label_value {
         background-color: rgba(255,255,255,0.3);
     }
 </style>
-<style scoped>
 
+
+<style scoped>
 /* ======================================= */
 .headerIcon {
   width: fit-content;
   height: var(--header-height);
+
   display: flex;
   align-items: center;
-  padding: 0 1rem;
   gap: 0.5rem;
-  cursor: pointer;
+
+  padding: 0 1rem;
+  box-sizing: border-box;
   position: absolute;
   top: 0;
   left: 0;
+
+  cursor: pointer;
 }
 .headerIcon img {
   height: 60%;
@@ -341,6 +312,19 @@ label.label_value {
   width: min(20vw, 100px);
 }
 /* -------------------------------------------------loading */
+main {
+  background:
+    linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
+    linear-gradient(240deg, transparent,red),
+    linear-gradient(45deg, transparent,yellow);
+    min-height: 100vh;
+    overflow: hidden;
+}
+.mainWrap {
+  width: 100vw;
+  /* height: 93vh; */
+  margin-top: 7vh;
+}
 /* account menu--------------------------------------------- */
 .accounts {
   position: absolute;
@@ -352,56 +336,59 @@ label.label_value {
   /* account > user  */
 .nav_account {
   height: 100%;
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 .nav_a_info_wrap {
 height: var(--header-height);
-min-width: max(15vw, 250px);
-width: fit-content;
-display: flex;
-align-items: center;
-transition: .4s ease;
 position: absolute;
 top: 0;
 right:0;
+padding: 0.5vh 2rem;
+box-sizing: border-box;
+
 }
 .nav_a_info {
-  width: 90%;
-  box-shadow: -3px 1px 5px 0px #66666679;
-  height: 80%;
-  display: flex;
-  align-items: center;
+  height: 100%;
   gap: 1rem;
-  border-radius: 3.5rem;
+  border-radius: 3vh;
   cursor: pointer;
   transition: .3s ease;
-  background-color: var(--main-color1);
+  display: flex;
+  background: linear-gradient(300deg, rgb(250,210,11), rgba(250, 182, 36, 0.719),rgb(178, 228, 0));
+
+  position: relative;
 }
-.nav_a_info.beforeClick {
-  color: black;
-  box-shadow: none;
-}
-.nav_a_info.beforeClick:hover {
+.nav_a_info:hover {
   background-color: rgb(255,210,11,0.5);
 }
 .nav_a_avatar {
-  height: 100%;
+  height: 6vh;
   aspect-ratio: 1/1;
-  border: 1px solid #66666679;
   border-radius: 50%;
   overflow: hidden;
   background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: sticky;
+  left: 5vw;
+  top: 0;
+  z-index: 5;
 }
 .nav_a_avatar img {
   width: 100%;
-
 }
 .nav_a_name{
   position: relative;
-  font-size: 120%;
+  font-size: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  word-break: keep-all;
+  min-width: 5vw;
+  z-index: 1;
 }
 .nav_a_name::after {
   content: '';
@@ -410,58 +397,39 @@ right:0;
   width: 1rem;
   height: 100%;
   position: absolute;
-  left: 100%;
+  right: 1em;
   top: 0;
   padding-left: 1rem;
 }
   /* account > menu */
 .nav_a_menu {
-  width: 0px;
-  overflow: hidden;
-  display: flex;
-  justify-content: start;
-  height: calc(90vh);
+  height: 93%;
   transition: .4s ease;
-  float: right;
-  border-radius: 2rem;
-  background-color: rgb(255,210,11,0.9);
-  backdrop-filter: blur(3px);
   position: absolute;
   bottom: 0;
   right: 0;
+  padding-right: 2rem;
 
 }
-.nav_a_menu.drawing {
-  box-shadow: -3px 1px 5px 0px #66666679;
-}
 .nav_a_menuWrap {
-  width: 20vw;
-  height: 90vh;
+  width: max(5vw, 5rem);
   word-break:keep-all;
   white-space: nowrap;
 }
-.nav_a_menu_playlist {
-  color: #ddd;
-  margin: 0px;
-  padding: 0px;
-  text-align: center;
+.nav_a_menuWrap li {
+  margin-top: 1rem;
 }
-.navBtn {
-  height: 100vh;
-  width: max-content;
-  background-color: rgba(255,255,255);
-}
-
-
 .nav_a_menuWrap li a {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem 0;
   text-decoration: none;
   color: black;
   font-size: 100%;
-  transition: .3s ease;
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: rgb(255,210,11);
+  border-radius: 50%;
 }
 .nav_a_menuWrap li a:hover {
   background-color: #efefef;

@@ -142,6 +142,7 @@
 </template>
 
 <script setup>
+// import ==============================================================
 import { ref ,reactive, watch} from 'vue';
 import { useDatabase , useAuth} from '../datasources/firebase';
 import { ref as dataRef, get, update } from 'firebase/database';
@@ -149,74 +150,26 @@ import { useStore } from 'vuex';
     const store = useStore();
 import { useRouter } from 'vue-router';
     const router = useRouter();
-// -----------------------------------------------------------------------
-// 내 플레이리스트 불러오기 //
-let myPlaylist = reactive({});
-let listState = ref(true)
+// varient ==============================================================
+let myPlaylist = reactive({});  // 로그인한 계정의 플레이리스트 목록
+let listState = ref(true)   // 로그인한 계정의 플레이리스트 유무
 const form = reactive({
-    account : store.getters.getAccount,
-    playlists : store.getters.getDataPlaylists
+    account : store.getters.getAccount,     // 로그인한 계정의 총 정보
+    playlists : store.getters.getDataPlaylists  // 플레이리스트 목록
 })
-watch(() => [form.account, form.playlists], (cur) => {
-    if (cur[0]) {
-        if (!cur[0]['playlist']){
-            listState.value = false
-        } else {
-            listState.value = true;
-            const q = Object.keys(cur[0].playlist);
-            console.log(q)
-            for ( const val of q ){
-                if (cur[1][val]) {
-                    myPlaylist[val] = cur[1][val]
-                }
-            }            
-            
-        }
-    }
-},{immediate: true, deep: true})
+let popularHashList = reactive({});     // 해시태그 중 플레이리스트 수가 가장 많은 순서 목록
+let openMenuPop = ref('');      // 지금 메뉴가 열려있는 플레이리스트의 키 값
+let openmodal = ref(false);     // 플레이리스트 수정 창 온오프
 
-// 해시태그 분석 //
-let popularHashList = reactive({});
-watch(() => store.getters.getDataHashs, (cur) => {
-    const q = [];
-    for (const key in cur) {
-        const w = Object.values(cur[key])
-        q.push([key, ...w]);
-    }
-    q.sort(function(a,b){
-        if (a.length < b.length) {return 1}
-        if (a.length > b.length) {return -1}
-        return 0
-    });
-    let r = q.slice(0,3);
-    r.forEach(v => {
-        const val = v;
-        const key = val.shift()
-        popularHashList[key] = val
-    })
-},{immediate: true, deep : true})
-
-
-// 클릭 이벤트 //
-let openMenuPop = ref('');
-const clickOpen = function(k){
+// function ===============================================================
+const clickOpen = function(k){  // 플레이리스트 메뉴 온오프
     openMenuPop.value = openMenuPop.value == k? null : k
 }
-
-// 작성자 정보 보러 가기 //
-const goToMakerAccount = function(items){
+const goToMakerAccount = function(items){   // 플레이리스트 작성자 클릭 시 정보창으로 이동
     const uid = store.getters.getDataPlaylists[items].uid;
     router.push({name : 'account', params : { ids : uid}})
 }
-// 플리카드 hover 시 이벤트 //
-const hoverTitle = function(e){
-    const title = e.target.querySelector(".sec1_l_t_t_wrap");
-    
-}
-
-// 슬라이드 이벤트 //
-const leftBtn = function(e){
-    
+const leftBtn = function(e){    // 목록 왼쪽으로 슬라이드 이동
     const slideBox = e.target.parentNode.parentNode;
     const slide = slideBox.querySelector(".sec_list_wrap")
         const boxWidth = slide.clientWidth;
@@ -235,7 +188,7 @@ const leftBtn = function(e){
         slideBody.style.left = `${bodyLeft - move}px`
     }
 }
-const rightBtn = function(e){
+const rightBtn = function(e){   // 목록 오른쪽으로 슬라이드 이동
     const slideBox = e.target.parentNode.parentNode;
     const slide = slideBox.querySelector(".sec_list_wrap")
     const boxWidth = slide.clientWidth;
@@ -251,7 +204,7 @@ const rightBtn = function(e){
         slideBody.style.left = `${bodyLeft + move}px`
     }
 }
-const totalLength = function(item){
+const totalLength = function(item){     // 해당 플레이리스트 총 재생길이 계산
     if (!item) {
         return '0초';
     }
@@ -265,38 +218,75 @@ const totalLength = function(item){
     const text = `${minutes}분 ${seconds}초`;
     return text;
 }
-
-// 리스트 수정,삭제 //
-const deleteList = function(key){
+const deleteList = function(key){       // 플레이리스트 삭제
     const deletes = {};
-    const data = store.getters.getDataPlaylists[key];
-    for( const val of Object.values(data)){
-        deletes[`hashs/${val}/${key}`] = null
+    const data = store.getters.getDataPlaylists[key].tag;
+    for( const val in data){
+        if(store.getters.getDataHashs[val]){
+            deletes[`hashs/${val}/${key}`] = null
+        }
     }
     deletes[`playlists/${key}`] = null;
     deletes[`account/${useAuth.currentUser.uid}/playlist/${key}`] = null;
-    deletes[`hashs/`]
     update(dataRef(useDatabase),deletes);
 }
-let currentSelectList = ref(null);
-let openmodal = ref(false);
-const editList = function(key){
-    const q = store.getters.getDataPlaylists[key];
-    currentSelectList.value = q;
-    openmodal.value = true
+const editList = function(){        // 플레이리스트 수정 창 오픈
+    const w = openMenuPop.value;
+    if (!w) {
+        const q = store.getters.getDataPlaylists[w];
+        currentSelectList.value = q;
+        openmodal.value = true
+    }
 }
+
+// 실시간 감시 ===================================================
+watch(() => [form.account, form.playlists], (cur) => {      // 내 플레이리스트 실시간 감시
+    if (cur[0]) {
+        if (!cur[0]['playlist']){
+            listState.value = false
+        } else {
+            listState.value = true;
+            const q = Object.keys(cur[0].playlist);
+            console.log(q)
+            for ( const val of q ){
+                if (cur[1][val]) {
+                    myPlaylist[val] = cur[1][val]
+                }
+            }            
+        }
+    }
+},{immediate: true, deep: true})
+watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실시간 조정
+    const q = [];
+    for (const key in cur) {
+        const w = Object.values(cur[key])
+        if(w){
+            q.push([key, ...w]);
+        }
+    }
+    q.sort(function(a,b){
+        if (a.length < b.length) {return 1}
+        if (a.length > b.length) {return -1}
+        return 0
+    });
+    let r = q.slice(0,3);
+    r.forEach(v => {
+        const val = v;
+        const key = val.shift()
+        popularHashList[key] = val
+    })
+},{immediate: true, deep : true})
+
 </script>
 
 <style scoped>
     /* common */
     #homeWrap {
-        /* background-color: rgb(0,0,0,0.8); */
-        background:
+        /* background:
         linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
             linear-gradient(240deg, transparent,red),
-            linear-gradient(45deg, transparent,yellow);
+            linear-gradient(45deg, transparent,yellow); */
         padding-top: var(--main-top-padding) ;
-        min-height: 100vh;
         
     }
     .section {
