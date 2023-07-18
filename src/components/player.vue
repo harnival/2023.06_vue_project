@@ -84,13 +84,14 @@
     import {onBeforeMount, onMounted, reactive, ref, watch, onBeforeUnmount , computed} from 'vue';
     import { useStore } from 'vuex';
         const store = useStore();
-    var player;
     // --------------------------------------------------------//
     let listInfo = reactive({});    //해당 플레이리스트의 총 정보
     let tracksArr = ref([]);    // 해당 플레이리스트의 트랙 정보
     let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
-    let nowTime = ref(0)       // 현재 곡 재생시간(초)
+    let nowTime = ref(!player? 0: player.getCurrentTime() )       // 현재 곡 재생시간(초)
     let nowTotal = ref(0)       // 현재 곡의 총 길이(초)
+    let clickValue = reactive({});    // 마우스 클릭 감시
+
     onBeforeMount(function(){
         // 템플릿 로드 전 정보 설정 --> 
         const playlistKey = route.params.listkey; //플레이리스트 고유 키
@@ -114,38 +115,32 @@
     })
 
 
-    const clickValue = reactive({});
     onMounted(function(){
-        if (!player){
+        var player;     // youtube iframe API
+        
+        const ball = document.querySelector(".ball")    // 재생표시줄 손잡이
+
+        if (!player){       // youtube API 프레임설정
             onYouTubeIframeAPIReady()
         }
 
-        const ball = document.querySelector(".ball")
         ball.addEventListener('mousedown',function(event){
             clickValue['click'] = true;
+            player.pauseVideo();
             
         })
+        let X =0, Y=0;
         window.addEventListener('mouseup',function(){
             clickValue['click'] = false;
             if(!X && !Y) {
                 X=0;
                 Y=0;
-
+                player.seekTo(nowTime.value,true);
+                player.playVideo();
             }
         })
-        let X=0,Y=0;
         window.addEventListener('mousemove',function(event){
-            const mx = event.movementX;
-            const my = event.movementY;
-            X += mx;
-            Y += my;
-            if(clickValue['click']){
-                if(nowTime.value < nowTotal/2){
-                    if((mx<0 && my<0)||(mx>0&&my>0)){
-                        nowTime += mx
-                    }
-                } 
-            }
+
         })
         watch(() => clickValue['click'], cur => {
             console.log(cur)
@@ -174,7 +169,9 @@
             }
         },1000)
     }
+    
     watch(() => nowTime.value, cur => {
+        nowTime.value = cur;
         const guage = document.querySelector('.pr_np_bar_guage');
         const ball = document.querySelector('.pr_np_ball');
         const [minutes , seconds] = tracksArr.value[nowPlayingInfo.value][1].duration;
@@ -440,12 +437,11 @@
         background-color: blue;
         position: absolute;
         transform: translateY(-50%);
-        transform-origin: center center;
+        transform-origin: center;
         cursor: pointer;
     }
     .hoverBall:hover {
-        transform-origin: center;
-        transform: scale(1.5,1.5);
+        transform: scale(1.1,1.1);
     }
     .pr_np_text {
         position: absolute;

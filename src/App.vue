@@ -143,6 +143,7 @@ const goSetting = function(){
 body {
   margin: 0;
   padding: 0;
+  user-select: none;
 }
 header {
   position: fixed;

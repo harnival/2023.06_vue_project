@@ -41,48 +41,50 @@
                     <button v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
                 </div>
 
+                <div class="a_pl_makeList" v-if="makeListPage">
+                    <form @submit.prevent="saveMakeList">
+                        <div class="a_pl_m_cover" @click="openFile">
+                            <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
+                            <img src="" class="a_pl_m_c_image"  v-if="!clickme">
+                            <div class="a_pl_m_cover_before"  v-if="clickme">
+                                <img src="../assets/img/plus.png" alt="" style="opacity:0.5">
+                                <p>
+                                    - 클릭하여 이미지를 선택해주세요. <br/>
+                                    - 미입력 시, 플레이리스트에 추가된 트랙의 앨범 이미지로 대체됩니다.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="a_pl_m_textWrap">
+                            <div class="a_pl_m_text">
+                                <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
+                            </div>
+                            <div class="a_pl_m_tag">
+                                <p>#태그 추가</p>
+                                <div class="a_pl_m_tag_inputwrap">
+                                    <input type="text" @change="addTag" placeholder="#">
+                                    <a href="/" @click.prevent="addTag">해시태그 추가</a>
+                                </div>
+                                <ul>
+                                    <li v-for="(item,key) in playlistContent.tag" :key="index">
+                                        #{{ key }}
+                                        <a href="/" @click.prevent="removeTag(index)"></a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="a_pl_m_btn">
+                                <button type="submit" class="a_pl_m_btn_submit">생성하기</button>
+                            </div>
+                        </div>
+                        <button type="button" @click="cancelMake" class="a_pl_m_cancel">취소</button>
+                    </form>
+                </div>
+
                 <ul v-if="plState" class="a_pl_list_wrap">
                     <li class="a_pl_list_new" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">
-                        <div class="a_pl_btns" v-if="!makeListPage">
+                        <div class="a_pl_btns">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>
-                        <div class="a_pl_makeList" v-else>
-                            <form @submit.prevent="saveMakeList">
-                                <div class="a_pl_m_cover" @click="openFile">
-                                    <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
-                                    <img src="" class="a_pl_m_c_image"  v-if="!clickme">
-                                    <div class="a_pl_m_cover_before"  v-if="clickme">
-                                        <img src="../assets/img/plus.png" alt="" style="opacity:0.5">
-                                        <p>
-                                            - 클릭하여 이미지를 선택해주세요. <br/>
-                                            - 미입력 시, 플레이리스트에 추가된 트랙의 앨범 이미지로 대체됩니다.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="a_pl_m_textWrap">
-                                    <div class="a_pl_m_text">
-                                        <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
-                                    </div>
-                                    <div class="a_pl_m_tag">
-                                        <p>#태그 추가</p>
-                                        <div class="a_pl_m_tag_inputwrap">
-                                            <input type="text" @change="addTag" placeholder="#">
-                                            <a href="/" @click.prevent="addTag">해시태그 추가</a>
-                                        </div>
-                                        <ul>
-                                            <li v-for="(item,key) in playlistContent.tag" :key="index">
-                                                #{{ key }}
-                                                <a href="/" @click.prevent="removeTag(index)"></a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div class="a_pl_m_btn">
-                                        <button type="submit" class="a_pl_m_btn_submit">생성하기</button>
-                                    </div>
-                                </div>
-                                <button type="button" @click="cancelMake" class="a_pl_m_cancel">취소</button>
-                            </form>
-                        </div>
+                        
                     </li>
 
                     <li class="a_pl_list" v-for="item in Object.entries(myPlaylist).reverse()" :key="item[0]" >
@@ -203,7 +205,8 @@ const makeList2 = async function(){
     }
 }
 const cancelMake = function(){
-    makeListPage.value = false
+    makeListPage.value = false;
+    clickme.value = true;
     playlistContent = {};
 }
 
