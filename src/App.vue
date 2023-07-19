@@ -52,7 +52,7 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onBeforeMount, watch, Transition} from 'vue';
+import {ref,reactive, onBeforeMount, watch, Transition, onMounted} from 'vue';
 import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
@@ -62,26 +62,44 @@ import { useRouter, useRoute } from 'vue-router';
 import { get, ref as dataRef, onValue} from 'firebase/database';
 
 // -------------------------------------------------------------------------------------
-onBeforeMount(function(){
-  // 데이터베이스 초기 정보 로드 //
-  store.dispatch('dataLoad');
-  // 로그인/로그아웃 체크 //
-  onAuthStateChanged(useAuth ,user => {
-    store.commit('setSetLoading',true)
+onValue(dataRef(useDatabase,`account`), (snapshot) => {
+  const data = snapshot.val()
+  store.commit(`setDataUsers`,data);
+  console.log('[userData]', data)
+})
+onValue(dataRef(useDatabase,`playlists`), (snapshot) => {
+  const data = snapshot.val()
+  store.commit(`setDataPlaylists`,data);
+  console.log('[playlist data]', data)
+})
+onValue(dataRef(useDatabase,'hashs'), (snapshot) => {
+  const data = snapshot.val()
+  store.commit('setDataHashs',data);
+  console.log('[hashs data]', data)
+})
+onValue(dataRef(useDatabase,'musicSearch'), (snapshot) => {
+  const data = snapshot.val()
+  store.commit('setDataMusicSearch',data);
+  console.log('[musicSearch data]', data)
+})
+store.commit('setSetLoading',true)
+onAuthStateChanged(useAuth ,user => {
     if(user) {
-      get(dataRef(useDatabase,`account/${useAuth.currentUser.uid}`))
-      .then(snapshot => {
-        const data = snapshot.val();
-        store.commit('loginAccount',data);
+      const uid = user.uid;
+      get(dataRef(useDatabase,`account/${uid}`))
+      .then(data => {
+        store.commit('loginAccount',data.val());
+        console.log('[Auth State] log In',data.val())
         oRouter.push({name : 'main'});
         store.commit('setSetLoading',false)
       })
     } else {
       store.commit('loginAccount',null);
       oRouter.push('/logIn');
+      console.log('[Auth State] Log Out')
       store.commit('setSetLoading',false)
     }
-  })
+   
 })
 
 // account 메뉴 슬라이드 클릭 이벤트 //

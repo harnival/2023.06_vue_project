@@ -111,6 +111,7 @@
                     </div>
                 </li>
             </ul>
+
         </div>
     </div>
 </template>
@@ -264,6 +265,9 @@ async function getId(){ // 검색 시 데이터 호출
                 })
             }).then(res => {
                 videos.value = dataArr;
+                const updates = {};
+                updates[`musicSearch/search/${searchs.value}`] = dataArr;
+                update(dataRef(useDatabase),updates);
                 store.commit('storeSearching',dataArr);
             })
         }
@@ -344,12 +348,6 @@ function onPlayerReady(event) {
 }
 
 //재생시간
-const qqqqq = function(id){
-
-}
-watch(() => videoCalled.value, cur => {
-})
-
 </script>
 
 <style scoped>

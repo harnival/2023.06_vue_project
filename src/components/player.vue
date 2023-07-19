@@ -85,16 +85,20 @@
     import { useStore } from 'vuex';
         const store = useStore();
     // --------------------------------------------------------//
-    let listInfo = reactive({});    //해당 플레이리스트의 총 정보
     let tracksArr = ref([]);    // 해당 플레이리스트의 트랙 정보
     let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
     let nowTime = ref(!player? 0: player.getCurrentTime() )       // 현재 곡 재생시간(초)
     let nowTotal = ref(0)       // 현재 곡의 총 길이(초)
     let clickValue = reactive({});    // 마우스 클릭 감시
 
+    const playlistKey = route.params.listkey; //플레이리스트 고유 키
+    const pl = store.getters.getDataPlaylists[playlistKey];
+    let listInfo = reactive(pl);    //해당 플레이리스트의 총 정보
+
+
+
     onBeforeMount(function(){
         // 템플릿 로드 전 정보 설정 --> 
-        const playlistKey = route.params.listkey; //플레이리스트 고유 키
         const db = dataRef(useDatabase, 'playlists/' + playlistKey);
         get(db).then( snapshot => {
             const data = snapshot.val()

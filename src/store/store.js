@@ -124,43 +124,32 @@ const store = createStore({
       .catch(err => console.log(err.message));
     },
 
-    pageLoading({commit,state}){
-      commit('setSetLoading',true);
-      onAuthStateChanged(useAuth, async function(user){
-        if (user) {
-          const uid = user.uid;
-          const data = await get(ref(useDatabase, 'account' + uid))
-          commit('loginAccount', data.val())
-          console.log("page load", uid)
-          router.push('/')
-          commit('setSetLoading',false)          
-        } else {
-          commit('setSetLoading',false)
-          router.push('/logIn')
-        }
+    dataLoad({commit,state}){
+      return  new Promise((res,rej) => {
+        commit('setSetLoading',true);
+        onValue(ref(useDatabase,`account`), (snapshot) => {
+          const data = snapshot.val()
+          commit(`setDataUsers`,data);
+          console.log('[userData]', data)
+        })
+        onValue(ref(useDatabase,`playlists`), (snapshot) => {
+          const data = snapshot.val()
+          commit(`setDataPlaylists`,data);
+          console.log('[playlist data]', data)
+        })
+        onValue(ref(useDatabase,'hashs'), (snapshot) => {
+          const data = snapshot.val()
+          commit('setDataHashs',data);
+          console.log('[hashs data]', data)
+        })
+        onValue(ref(useDatabase,'musicSearch'), (snapshot) => {
+          const data = snapshot.val()
+          commit('setDataMusicSearch',data);
+          console.log('[musicSearch data]', data)
+        })
+        res(state.dataUsers);
       })
-    },
-    dataLoad({commit}){
-      onValue(ref(useDatabase,`account`), (snapshot) => {
-        const data = snapshot.val()
-        commit(`setDataUsers`,data);
-        console.log('[userData]', data)
-      })
-      onValue(ref(useDatabase,`playlists`), (snapshot) => {
-        const data = snapshot.val()
-        commit(`setDataPlaylists`,data);
-        console.log('[playlist data]', data)
-      })
-      onValue(ref(useDatabase,'hashs'), (snapshot) => {
-        const data = snapshot.val()
-        commit('setDataHashs',data);
-        console.log('[hashs data]', data)
-      })
-      onValue(ref(useDatabase,'musicSearch'), (snapshot) => {
-        const data = snapshot.val()
-        commit('setDataMusicSearch',data);
-        console.log('[musicSearch data]', data)
-      })
+      
     },
     userDelete({state}){
       const userUid = useAuth.currentUser.uid
