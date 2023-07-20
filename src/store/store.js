@@ -18,7 +18,8 @@ const store = createStore({
       dataUsers : {},
       dataPlaylists : {},
       dataHashs : {},
-      dataMusicSearch : {}
+      dataMusicSearch : {},
+      textin : null
     }
   },
   mutations: {
@@ -58,8 +59,10 @@ const store = createStore({
       setTimeout(function(){
         state.innerNotification.splice(len-1,1);
       },2000);
+    },
+    setText(state){
+      return clearInterval(state.textin);
     }
-    
   },
   getters: {
     page(state){
@@ -95,8 +98,13 @@ const store = createStore({
     },
     getInnerNotification(state){
       return state.innerNotification
+    },
+    getText(state,payload){
+      state.textin = setInterval(function(){
+        const t = payload.getCurrentTime();
+        console.log(t)
+      },500)
     }
-    
   },
   actions: {
     loginWithEmail({commit, state},payload){

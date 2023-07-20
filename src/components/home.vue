@@ -247,7 +247,6 @@ watch(() => [form.account, form.playlists], (cur) => {      // 내 플레이리�
         } else {
             listState.value = true;
             const q = Object.keys(cur[0].playlist);
-            console.log(q)
             for ( const val of q ){
                 if (cur[1][val]) {
                     myPlaylist[val] = cur[1][val]
@@ -287,7 +286,6 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
             linear-gradient(240deg, transparent,red),
             linear-gradient(45deg, transparent,yellow); */
         padding-top: var(--main-top-padding) ;
-        
     }
     .section {
         background-color: rgba(0, 0, 0, 0.7);

@@ -2,7 +2,7 @@
     <div id="playerBox">
         <div id="player2"></div>
         <div class="playerWrapWrap">
-            <div class="playerWrap">
+            <div class="playerWrap" v-if="loadCom">
                 <div class="pr_mediaWrap" @mouseenter="show=true" @mouseleave="show=false">
                     <Transition>
                         <div class="pr_title" v-show="show">
@@ -16,7 +16,6 @@
                                 </div>
                                 <span class="pr_t_name">{{ listInfo.maker_name }}</span>
                             </p>
-                            <a href="/" @click.prevent></a>
                         </div>
                     </Transition>                    
                     <div class="pr_cover" @click="listOut = !listOut">                    
@@ -37,7 +36,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="pr_np_ball"><div class="ball hoverBall"></div></div>
+                            <div class="pr_np_ball"><div class="ball hoverBall" @click="console.log(tracksArr)"></div></div>
                             <div class="pr_np_text">
                                 <p class="pr_np_title">{{ tracksArr[nowPlayingInfo][1].title }}</p>
                                 <p class="pr_np_artist">{{ tracksArr[nowPlayingInfo][1].artist }}</p>
@@ -48,20 +47,20 @@
                     <Transition name="listIn">
                         <div class="p_list" v-show="listOut">
                             <ul>
-                                <li v-for="(item,key,index) in listInfo.tracks" class="p_list_list" @click="clickToMusicPlay(index)">
+                                <li v-for="(item,index) in tracksArr" class="p_list_list" @click="clickToMusicPlay(index)" :key="item[0]">
                                     <div class="p_list_image">
-                                        <img :src="item.thumbnail" alt="">
+                                        <img :src="item[1].thumbnail" alt="">
                                     </div>
                                     <div class="p_list_text">
                                         <div class="p_list_title">
-                                            <span>{{ item.title }}</span>
+                                            <span>{{ item[1].title }}</span>
                                         </div>
                                         <p class="p_list_duration">
-                                            {{ item.duration['0'] < 10? '0'+item.duration[0] : item.duration[0] }} : 
-                                            {{ !item.duration['1']? "00" : item.duration[1] < 10? '0'+item.duration[1] : item.duration[1] }}
+                                            {{ item[1].duration['0'] < 10? '0'+item[1].duration[0] : item[1].duration[0] }} : 
+                                            {{ !item[1].duration['1']? "00" : item[1].duration[1] < 10? '0'+item[1].duration[1] : item[1].duration[1] }}
                                         </p>
                                         <div class="p_list_artist">
-                                            <span>{{ item.artist }}</span>
+                                            <span>{{ item[1].artist }}</span>
                                         </div>
                                     </div>
                                 </li>
@@ -85,192 +84,150 @@
     import { useStore } from 'vuex';
         const store = useStore();
     // --------------------------------------------------------//
-    let tracksArr = ref([]);    // 해당 플레이리스트의 트랙 정보
+    let tracksArr = reactive([]);    // 해당 플레이리스트의 트랙 정보
     let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
-    let nowTime = ref(!player? 0: player.getCurrentTime() )       // 현재 곡 재생시간(초)
+    let nowTime = ref(0)       // 현재 곡 재생시간(초)
     let nowTotal = ref(0)       // 현재 곡의 총 길이(초)
     let clickValue = reactive({});    // 마우스 클릭 감시
 
     const playlistKey = route.params.listkey; //플레이리스트 고유 키
     const pl = store.getters.getDataPlaylists[playlistKey];
-    let listInfo = reactive(pl);    //해당 플레이리스트의 총 정보
+    let listInfo = reactive({});    //해당 플레이리스트의 총 정보
+    var player;     // youtube iframe API
+    let show = ref(false);      // 제목창 hover 온오프
+    let listOut = ref(false);       // 플레이어 - 리스트 온오프
+    let nowPlayingInfo = ref(0);        // 현재 재생중인 리스트 순서
+    let loadCom = ref(false);
+    let intervalId = ref(null);
+// ----------------------------------------------------------------------------
+    onMounted(function(){
+        loadCom.value = false;
+        get(dataRef(useDatabase, 'playlists/' + playlistKey)).then( snapshot => {
 
-
-
-    onBeforeMount(function(){
-        // 템플릿 로드 전 정보 설정 --> 
-        const db = dataRef(useDatabase, 'playlists/' + playlistKey);
-        get(db).then( snapshot => {
             const data = snapshot.val()
-            for(const key in data) {
-                listInfo[key] = data[key]
-            }
+            listInfo = Object.assign(listInfo,data);
+            tracksArr = Object.entries(data.tracks);        // [ [ music id , { music info } ], … ]
             return data
         }).then((res) => {
-            
-            const userDb = dataRef(useDatabase, 'account/' + res.uid);
-            get(userDb).then(snapshot => {
-                const data = snapshot.val();
-                listInfo['maker_name'] = data.name;
-                listInfo['maker_photoURL'] = data.photoURL;
-            })
-        })
-
-    })
-
-
-    onMounted(function(){
-        var player;     // youtube iframe API
-        
-        const ball = document.querySelector(".ball")    // 재생표시줄 손잡이
-
-        if (!player){       // youtube API 프레임설정
-            onYouTubeIframeAPIReady()
-        }
-
-        ball.addEventListener('mousedown',function(event){
-            clickValue['click'] = true;
-            player.pauseVideo();
-            
-        })
-        let X =0, Y=0;
-        window.addEventListener('mouseup',function(){
-            clickValue['click'] = false;
-            if(!X && !Y) {
-                X=0;
-                Y=0;
-                player.seekTo(nowTime.value,true);
-                player.playVideo();
+            const users = store.getters.getDataUsers[res.uid];
+            listInfo['maker_name'] = users.name;
+            listInfo['maker_photo'] = users.photoURL;
+            if (!player){       // youtube API 프레임설정
+                onYouTubeIframeAPIReady()
             }
+            loadCom.value = true;
         })
-        window.addEventListener('mousemove',function(event){
-
-        })
-        watch(() => clickValue['click'], cur => {
-            console.log(cur)
-        })
-
+        intervalId.value = setInterval(async function(){
+            console.log(player.getCurrentTime())
+            const cur_sec = await player.getCurrentTime();
+            const toSeconds = Math.floor(cur_sec / 1000)
+            nowTime.value = toSeconds
+        },100)
     })
-    onBeforeUnmount(function(){
-        if(player){
-            player.destroy()
-            clearInterval(set)
-        }
-    })
-    watch(() => listInfo, cur => {
-        tracksArr.value = Object.entries(cur.tracks);
-    },{ deep: true})
 
-    let show = ref(false);
+    
 
-    // 재생시간 //
-    
-    const set = function(){
-        return setInterval(function(){
-            const time = Math.floor(player.getCurrentTime()); 
-            if(nowTime.value !== time){
-                nowTime.value = time
-            }
-        },1000)
-    }
-    
     watch(() => nowTime.value, cur => {
-        nowTime.value = cur;
-        const guage = document.querySelector('.pr_np_bar_guage');
-        const ball = document.querySelector('.pr_np_ball');
-        const [minutes , seconds] = tracksArr.value[nowPlayingInfo.value][1].duration;
-        const totalTime = 60 * minutes + 1*seconds;
-        nowTotal.value = totalTime;
-        const nowSet = 180 / totalTime;
-        deg.value = nowSet;
-        if(cur == 0) {
-            guage.style.transition = '';
-            ball.style.transition = '';
-            guage.style.transform = `rotateZ(0deg)`
-            ball.style.transform = `rotateZ(0deg)`
+        const guage = document.querySelector('pr_np_bar_guage');
+        const ball = document.querySelector('.pr_np_ball')
+        if( cur == 0 ){
+            guage.style.transform = 'rotateZ(0deg)'
+            ball.style.transform = 'rotateZ(0deg)'
         } else {
-            guage.style.transition = '1s linear';
-            ball.style.transition = '1s linear';
-            guage.style.transform = `rotateZ(${ cur * nowSet }deg)`
-            ball.style.transform = `rotateZ(${ cur * nowSet }deg)`
+            guage.style.transform = `rotateZ(${cur * deg}deg)`
+            ball.style.transform = `rotateZ(${cur * deg}deg)`
         }
     })
-    
-    
-    //  iframe API ===================================================//
+    function done() {
+        player.destroy()
+        clearInterval(intervalId)
+        console.log("done")
 
-    let playState = ref(-1)
-    let videoCalled = ref(null);
-    let playTime = ref(0);
-    
-    const addClass = (index) => {
-        const list = document.querySelectorAll(".p_list_list");
-        list.forEach((v,i) => {
-         if( i == index ){
-             v.classList.add('activeList')
-         } else {
-             v.classList.remove('activeList')
-         }
-        })
     }
-        // 초기 영상 로드 //
-    function onYouTubeIframeAPIReady() {
-        store.commit('setSetLoading',true)
-        player = new YT.Player('player2', {
-            height: '0',
-            width: '0',
-            videoId: tracksArr.value[0][0],
-            events: {
-            'onReady': onPlayerReady,
-            'onStateChange': stateChange
-            }
-        })
-        addClass(0)
-        store.commit('setSetLoading',false)
-    }
-    function stateChange(event) { // 플레이어 상태 변화 실시간 입력
-        playState.value = event.data;
-        if (event.data == 0) {
-            clearInterval(set);
-        }
-    }
-    function onPlayerReady(event) {
-        event.target.playVideo();
-        set();
-    }
-    // 재생상태 //
-    var isItPlay = ref(true)
-    function pausePlayer() {
-        const img = document.querySelector(".pr_np_img")
-        if( isItPlay.value ){
-            player.pauseVideo()
-            isItPlay.value = false
-            img.style.animationPlayState = 'paused'
-        } else {
-            player.playVideo()
-            isItPlay.value = true
-            img.style.animationPlayState = 'running'
-        }
-    }
-    //======================================================iframe API//
-    // 현재 재생 중인 노래 정보 실시간 입력 //
-    let nowPlayingInfo = ref(0);
-    const clickToMusicPlay = function(index){
-       nowPlayingInfo.value = index
-    }
-    watch(()=>playState.value, (cur,past) => {
-        if(cur == 0 && past == 1){
-            nowPlayingInfo.value = nowPlayingInfo.value < tracksArr.value.length-1? nowPlayingInfo.value +1 : 0;
-        }
+    window.addEventListener('beforeunload',function(){
+        done()
     })
-    watch(()=> nowPlayingInfo.value, (cur) => {
-        player.loadVideoById(tracksArr.value[cur][0]);
-        player.playVideo()
-        addClass(cur);
+    onBeforeUnmount(function(){ done() })
+            
+            //  iframe API ===================================================//
         
-    })
-    // 컨텐츠 부분 플레이어와 리스트 //
-    let listOut = ref(false);
+            let playState = ref(-1)            
+            const addClass = (index) => {
+                const list = document.querySelectorAll(".p_list_list");
+                list.forEach((v,i) => {
+                 if( i == index ){
+                     v.classList.add('activeList')
+                 } else {
+                     v.classList.remove('activeList')
+                 }
+                })
+            }
+                // 초기 영상 로드 //
+            function onYouTubeIframeAPIReady() {
+                player = new YT.Player('player2', {
+                    height: '0',
+                    width: '0',
+                    videoId: tracksArr[0][0],
+                    events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': stateChange
+                    }
+                })
+                addClass(0)
+                intervalId;
+            }
+            function stateChange(event) { // 플레이어 상태 변화 실시간 입력
+                playState.value = event.data;
+                if (event.data == 0) {
+                }
+            }
+            function onPlayerReady(event) {
+                event.target.playVideo();
+            }
+            // 재생상태 //
+            var isItPlay = ref(true)
+            function pausePlayer() {
+                const img = document.querySelector(".pr_np_img")
+                if( isItPlay.value ){
+                    player.pauseVideo()
+                    isItPlay.value = false
+                    img.style.animationPlayState = 'paused'
+                } else {
+                    player.playVideo()
+                    isItPlay.value = true
+                    img.style.animationPlayState = 'running'
+                }
+            }
+            //======================================================iframe API//
+            // 현재 재생 중인 노래 정보 실시간 입력 //
+            const clickToMusicPlay = function(idx){
+               nowPlayingInfo.value = idx
+            }
+            watch(()=>playState.value, (cur,past) => {
+                if( cur == 1 ){
+                    intervalId
+                } else if ( cur == 0 || cur == -1 ){
+                    clearInterval(intervalId)
+                }
+                if(cur == 0 && past == 1){
+                    nowPlayingInfo.value = nowPlayingInfo.value < tracksArr.length-1? nowPlayingInfo.value +1 : 0;
+                }
+            })
+            watch(()=> nowPlayingInfo.value, (cur) => {
+                const [dm, ds] = tracksArr[cur][1].duration;
+                nowTotal.value = 60 * dm + 1 * ds;
+                deg.value = 180 / nowTotal.value;
+
+
+                player.loadVideoById(tracksArr[cur][0]);
+                player.playVideo()
+                addClass(cur);
+                intervalId;
+                
+            })
+
+
+
     
     
    
@@ -283,11 +240,11 @@
         left: 0;
     }
     #playerBox {
-        padding-top: var(--header-height);        
-        height: 100vh;
+        min-height: 100vh;
         box-sizing: border-box;
         /* background-color: white; */
-        background-color: rgb(0,0,0,0.9);
+        /* background-color: rgb(0,0,0,0.9);
+        padding-top: var(--header-height);         */
         display: flex;
         justify-content: center;
         align-items: center;
