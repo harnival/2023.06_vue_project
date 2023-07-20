@@ -7,8 +7,6 @@
   </div>
   <div id="appBox" v-else>
     <header>
-      <button @click="store.getters.getText">ffffffff</button>
-      <button @click="store.commit('setText')">ffdffff</button>
       <div class="headerIcon" @click="goHome">
         <img src="./assets/img/main-icon-fill2.png">
         <h1>CHEEZS</h1>

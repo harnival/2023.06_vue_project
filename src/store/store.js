@@ -60,8 +60,15 @@ const store = createStore({
         state.innerNotification.splice(len-1,1);
       },2000);
     },
-    setText(state){
-      return clearInterval(state.textin);
+    endText(state){
+      clearInterval(state.textin);
+      state.textin = null;
+    },
+    startText(state,payload){
+      state.textin = setInterval(function(){
+        const t = payload.getCurrentTime();
+        console.log(t)
+      },500)
     }
   },
   getters: {
@@ -99,12 +106,7 @@ const store = createStore({
     getInnerNotification(state){
       return state.innerNotification
     },
-    getText(state,payload){
-      state.textin = setInterval(function(){
-        const t = payload.getCurrentTime();
-        console.log(t)
-      },500)
-    }
+    
   },
   actions: {
     loginWithEmail({commit, state},payload){

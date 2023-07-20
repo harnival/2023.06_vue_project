@@ -1,7 +1,7 @@
 <template>
     <div id="playerBox">
         <div id="player2"></div>
-        <div class="playerWrapWrap">
+        <div class="playerWrapWrap" @mousemove="(e) => windowMouseMove(e)">
             <div class="playerWrap" v-if="loadCom">
                 <div class="pr_mediaWrap" @mouseenter="show=true" @mouseleave="show=false">
                     <Transition>
@@ -12,7 +12,7 @@
                             </p>
                             <p class="pr_t_maker">
                                 <div class="pr_t_avatar">
-                                    <img :src="listInfo.maker_photoURL">
+                                    <img :src="listInfo.maker_photo">
                                 </div>
                                 <span class="pr_t_name">{{ listInfo.maker_name }}</span>
                             </p>
@@ -28,7 +28,7 @@
                         <div class="pr_nowplaying" v-show="!listOut">
                             <div class="pr_np_cover">
                                 <div class="pr_np_bar"><div class="pr_np_bar_guage"></div></div>
-                                <div class="pr_np_imgWrap" @click="qqqq">
+                                <div class="pr_np_imgWrap">
                                     <img :src="tracksArr[nowPlayingInfo][1].thumbnail" class="pr_np_img">
                                     <div class="pr_np_playState">
                                         <img src="../assets/img/play.svg" @click="pausePlayer" v-if="!isItPlay">
@@ -36,7 +36,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="pr_np_ball"><div class="ball hoverBall" @click="console.log(tracksArr)"></div></div>
+                            <div class="pr_np_ball"><div class="ball hoverBall" @mousedown="ballMouseDown"></div></div>
                             <div class="pr_np_text">
                                 <p class="pr_np_title">{{ tracksArr[nowPlayingInfo][1].title }}</p>
                                 <p class="pr_np_artist">{{ tracksArr[nowPlayingInfo][1].artist }}</p>
@@ -88,19 +88,21 @@
     let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
     let nowTime = ref(0)       // 현재 곡 재생시간(초)
     let nowTotal = ref(0)       // 현재 곡의 총 길이(초)
-    let clickValue = reactive({});    // 마우스 클릭 감시
-
+    let clickValue = ref(false);    // 마우스 클릭 감시
     const playlistKey = route.params.listkey; //플레이리스트 고유 키
-    const pl = store.getters.getDataPlaylists[playlistKey];
     let listInfo = reactive({});    //해당 플레이리스트의 총 정보
     var player;     // youtube iframe API
     let show = ref(false);      // 제목창 hover 온오프
     let listOut = ref(false);       // 플레이어 - 리스트 온오프
     let nowPlayingInfo = ref(0);        // 현재 재생중인 리스트 순서
     let loadCom = ref(false);
-    let intervalId = ref(null);
+    let intervalId = ref(null);     // 재생시간 인터벌
+    let playState = ref(-1);        // 재생상태
 // ----------------------------------------------------------------------------
+
+// 플레이어 로드 ========================================================================//
     onMounted(function(){
+        console.log("[player mounted]")
         loadCom.value = false;
         get(dataRef(useDatabase, 'playlists/' + playlistKey)).then( snapshot => {
 
@@ -117,46 +119,47 @@
             }
             loadCom.value = true;
         })
+        
+    })
+// =====================================================================================//
+    const startInterval = function(){
         intervalId.value = setInterval(async function(){
-            console.log(player.getCurrentTime())
             const cur_sec = await player.getCurrentTime();
-            const toSeconds = Math.floor(cur_sec / 1000)
-            nowTime.value = toSeconds
+            const toSeconds = Math.floor(cur_sec);
+            nowTime.value = toSeconds;
+
         },100)
-    })
-
+    }
+    const watchNowTime = function(){
+        const guage = document.querySelector(".pr_np_bar_guage");
+        const ball = document.querySelector(".pr_np_ball");
+        
+        watch(() => nowTime.value, (cur) => {
+            guage.style.transform = `rotateZ(${deg.value * cur}deg)`
+            ball.style.transform = `rotateZ(${deg.value * cur}deg)`
+        })
+    }
     
-
-    watch(() => nowTime.value, cur => {
-        const guage = document.querySelector('pr_np_bar_guage');
-        const ball = document.querySelector('.pr_np_ball')
-        if( cur == 0 ){
-            guage.style.transform = 'rotateZ(0deg)'
-            ball.style.transform = 'rotateZ(0deg)'
-        } else {
-            guage.style.transform = `rotateZ(${cur * deg}deg)`
-            ball.style.transform = `rotateZ(${cur * deg}deg)`
-        }
-    })
+    
+    // 페이지 종료 및 라우터 이동 시 ====================================================================//
     function done() {
         player.destroy()
-        clearInterval(intervalId)
+        clearInterval(intervalId.value)
         console.log("done")
-
     }
-    window.addEventListener('beforeunload',function(){
-        done()
-    })
-    onBeforeUnmount(function(){ done() })
-            
-            //  iframe API ===================================================//
-        
-            let playState = ref(-1)            
+    window.addEventListener('beforeunload',function(){ done(); console.log("[player beforeunload]"); })
+    onBeforeUnmount(function(){ done(); console.log("[player beforeunmount]") })
+    //=================================================================================================//
+
+    //  iframe API ===================================================//
+
             const addClass = (index) => {
                 const list = document.querySelectorAll(".p_list_list");
+                console.log("addclass")
                 list.forEach((v,i) => {
                  if( i == index ){
                      v.classList.add('activeList')
+
                  } else {
                      v.classList.remove('activeList')
                  }
@@ -169,21 +172,20 @@
                     width: '0',
                     videoId: tracksArr[0][0],
                     events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': stateChange
+                    'onReady': onVideoReady,
+                    'onStateChange': (event) => { playState.value = event.data; }
                     }
                 })
-                addClass(0)
-                intervalId;
+                
             }
-            function stateChange(event) { // 플레이어 상태 변화 실시간 입력
-                playState.value = event.data;
-                if (event.data == 0) {
-                }
-            }
-            function onPlayerReady(event) {
+            const onVideoReady = function(event){
                 event.target.playVideo();
+                addClass(0);
+                startInterval();
+                watchNowTime();
+                watchNow();
             }
+           
             // 재생상태 //
             var isItPlay = ref(true)
             function pausePlayer() {
@@ -192,41 +194,76 @@
                     player.pauseVideo()
                     isItPlay.value = false
                     img.style.animationPlayState = 'paused'
+                    clearInterval(intervalId.value)
                 } else {
                     player.playVideo()
                     isItPlay.value = true
                     img.style.animationPlayState = 'running'
+                    startInterval();
                 }
             }
-            //======================================================iframe API//
-            // 현재 재생 중인 노래 정보 실시간 입력 //
             const clickToMusicPlay = function(idx){
                nowPlayingInfo.value = idx
             }
-            watch(()=>playState.value, (cur,past) => {
+
+            watch(()=>playState.value, (cur,past) => {      // 재생상태 체인지 시
                 if( cur == 1 ){
-                    intervalId
-                } else if ( cur == 0 || cur == -1 ){
-                    clearInterval(intervalId)
+                    startInterval();
+                }
+                if ( cur == 0 || cur == -1 ){
+                    clearInterval(intervalId.value);
                 }
                 if(cur == 0 && past == 1){
                     nowPlayingInfo.value = nowPlayingInfo.value < tracksArr.length-1? nowPlayingInfo.value +1 : 0;
                 }
+            },{immediate : true})
+
+            const watchNow = function(){
+                watch(()=> nowPlayingInfo.value, (cur) => {     // 곡 체인지 시
+                    const [dm, ds] = tracksArr[cur][1].duration;
+                    nowTotal.value = 60 * dm + 1 * ds;
+                    deg.value = 180 / nowTotal.value;
+    
+                    player.loadVideoById(tracksArr[cur][0]);
+                    player.playVideo()
+                    addClass(cur); 
+                },{immediate : true})
+            }
+
+            const ballMouseDown = function(event){
+                clickValue.value = true;
+                const img = document.querySelector(".pr_np_img")
+                if(playState.value == 1){
+                    player.pauseVideo();
+                    isItPlay.value = false
+                    img.style.animationPlayState = 'paused'
+                    clearInterval(intervalId.value)
+                }
+            }
+            const windowMouseMove = function(event){
+                if(clickValue.value){
+                    const mx = event.movementX;
+                    const my = event.movementY;
+                    const len = Math.sqrt( Math.pow(mx,2) + Math.pow(my,2) )
+                    if( my < 0 ){
+                        nowTime.value = nowTime.value >0? nowTime.value - 0.3 : nowTime.value;
+                    } else {
+                         nowTime.value =nowTime.value < nowTotal.value? nowTime.value + 0.3 :  nowTime.value; 
+                     }
+                     console.log(nowTime.value, mx, my)
+                }
+            }
+            window.addEventListener('mouseup',function(){
+                const img = document.querySelector(".pr_np_img")
+                if(clickValue.value){
+                    clickValue.value = false;
+                    player.seekTo(nowTime.value,true);
+                    player.playVideo();
+                    isItPlay.value = true
+                    img.style.animationPlayState = 'running'
+                    startInterval();
+                }
             })
-            watch(()=> nowPlayingInfo.value, (cur) => {
-                const [dm, ds] = tracksArr[cur][1].duration;
-                nowTotal.value = 60 * dm + 1 * ds;
-                deg.value = 180 / nowTotal.value;
-
-
-                player.loadVideoById(tracksArr[cur][0]);
-                player.playVideo()
-                addClass(cur);
-                intervalId;
-                
-            })
-
-
 
     
     
@@ -375,7 +412,7 @@
     .pr_np_bar_guage {
         width: 50%;
         height: 100%;
-        background-color: blue;
+        background-color: rgb(255,210,11);
         transform-origin: right center;
         z-index: 9999;
     }
@@ -387,7 +424,6 @@
         position: absolute;
         top: 0;
         left: 0;
-        transform: rotateZ(0deg);
         transform-origin: center;
         z-index: 2000;
     }
@@ -395,14 +431,14 @@
         width: 0.7rem;
         aspect-ratio: 1/1;
         border-radius: 50%;
-        background-color: blue;
+        background-color: rgb(255,210,11);
         position: absolute;
         transform: translateY(-50%);
         transform-origin: center;
         cursor: pointer;
     }
     .hoverBall:hover {
-        transform: scale(1.1,1.1);
+        transform: scale(1.3,1.3) translateY(-50%);
     }
     .pr_np_text {
         position: absolute;
