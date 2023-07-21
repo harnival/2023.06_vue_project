@@ -83,7 +83,7 @@
     import {onBeforeMount, onMounted, reactive, ref, watch, onBeforeUnmount , computed} from 'vue';
     import { useStore } from 'vuex';
         const store = useStore();
-    // --------------------------------------------------------//
+// --------------------------------------------------------//
     let tracksArr = reactive([]);    // 해당 플레이리스트의 트랙 정보
     let deg = ref(0);       // 현재 곡에서 1초당 재생바가 이동하는 각도
     let nowTime = ref(0)       // 현재 곡 재생시간(초)
@@ -102,10 +102,8 @@
 
 // 플레이어 로드 ========================================================================//
     onMounted(function(){
-        console.log("[player mounted]")
         loadCom.value = false;
         get(dataRef(useDatabase, 'playlists/' + playlistKey)).then( snapshot => {
-
             const data = snapshot.val()
             listInfo = Object.assign(listInfo,data);
             tracksArr = Object.entries(data.tracks);        // [ [ music id , { music info } ], … ]
@@ -122,6 +120,8 @@
         
     })
 // =====================================================================================//
+
+// 플레이타임 실시간 감시========================================================//
     const startInterval = function(){
         intervalId.value = setInterval(async function(){
             const cur_sec = await player.getCurrentTime();
@@ -139,9 +139,9 @@
             ball.style.transform = `rotateZ(${deg.value * cur}deg)`
         })
     }
+// ============================================================================================//
     
-    
-    // 페이지 종료 및 라우터 이동 시 ====================================================================//
+// 페이지 종료 및 라우터 이동 시 플레이어 초기화====================================================================//
     function done() {
         player.destroy()
         clearInterval(intervalId.value)
@@ -149,59 +149,62 @@
     }
     window.addEventListener('beforeunload',function(){ done(); console.log("[player beforeunload]"); })
     onBeforeUnmount(function(){ done(); console.log("[player beforeunmount]") })
-    //=================================================================================================//
+//=================================================================================================//
 
-    //  iframe API ===================================================//
+// 플레이 중인 음악 표시 ====================================================================//
+    const addClass = (index) => {
+        const list = document.querySelectorAll(".p_list_list");
+        list.forEach((v,i) => {
+            if( i == index ){
+                v.classList.add('activeList')
 
-            const addClass = (index) => {
-                const list = document.querySelectorAll(".p_list_list");
-                console.log("addclass")
-                list.forEach((v,i) => {
-                 if( i == index ){
-                     v.classList.add('activeList')
+            } else {
+                v.classList.remove('activeList')
+            }
+        })
+    }
+// ==========================================================================================//
 
-                 } else {
-                     v.classList.remove('activeList')
-                 }
-                })
+// player 생성 및 초기 영상 로드 =========================================================================//
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player2', {
+            height: '0',
+            width: '0',
+            videoId: tracksArr[0][0],
+            events: {
+            'onReady': onVideoReady,
+            'onStateChange': (event) => { playState.value = event.data; }
             }
-                // 초기 영상 로드 //
-            function onYouTubeIframeAPIReady() {
-                player = new YT.Player('player2', {
-                    height: '0',
-                    width: '0',
-                    videoId: tracksArr[0][0],
-                    events: {
-                    'onReady': onVideoReady,
-                    'onStateChange': (event) => { playState.value = event.data; }
-                    }
-                })
-                
-            }
-            const onVideoReady = function(event){
-                event.target.playVideo();
-                addClass(0);
-                startInterval();
-                watchNowTime();
-                watchNow();
-            }
-           
-            // 재생상태 //
-            var isItPlay = ref(true)
-            function pausePlayer() {
-                const img = document.querySelector(".pr_np_img")
-                if( isItPlay.value ){
-                    player.pauseVideo()
-                    isItPlay.value = false
-                    img.style.animationPlayState = 'paused'
-                    clearInterval(intervalId.value)
-                } else {
-                    player.playVideo()
-                    isItPlay.value = true
-                    img.style.animationPlayState = 'running'
-                    startInterval();
-                }
-            }
+        })
+        
+    }
+    const onVideoReady = function(event){
+        event.target.playVideo();
+        addClass(0);
+        startInterval();
+        watchNowTime();
+        watchNow();
+    }
+//===================================================================================================//
+
+// 재생상태에 따라 플레이어 효과 설정================================================//
+    var isItPlay = ref(true)
+    function pausePlayer() {
+        const img = document.querySelector(".pr_np_img")
+        if( isItPlay.value ){
+            player.pauseVideo()
+            isItPlay.value = false
+            img.style.animationPlayState = 'paused'
+            clearInterval(intervalId.value)
+        } else {
+            player.playVideo()
+            isItPlay.value = true
+            img.style.animationPlayState = 'running'
+            startInterval();
+        }
+    }
+//========================================================================================//
+
             const clickToMusicPlay = function(idx){
                nowPlayingInfo.value = idx
             }
@@ -250,7 +253,6 @@
                     } else {
                          nowTime.value =nowTime.value < nowTotal.value? nowTime.value + 0.3 :  nowTime.value; 
                      }
-                     console.log(nowTime.value, mx, my)
                 }
             }
             window.addEventListener('mouseup',function(){
@@ -279,9 +281,6 @@
     #playerBox {
         min-height: 100vh;
         box-sizing: border-box;
-        /* background-color: white; */
-        /* background-color: rgb(0,0,0,0.9);
-        padding-top: var(--header-height);         */
         display: flex;
         justify-content: center;
         align-items: center;

@@ -3,42 +3,42 @@
         <div class="a_profile">
             <div class="a_p_content">
                 <div class="a_p_c_image">
-                    <img :src="accountInfo.photoURL" alt="">
+                    <img :src="accountInfo.value.photoURL" alt="">
                 </div>
                 <div class="a_p_c_text">
                     <div class="a_p_c_name">
-                        <strong class="a_p_c_n_name">{{ accountInfo.name }}</strong>
-                        <span class="a_p_c_n_id">@{{ accountInfo.id }}</span>
+                        <strong class="a_p_c_n_name">{{ accountInfo.value.name }}</strong>
+                        <span class="a_p_c_n_id">@{{ accountInfo.value.id }}</span>
                     </div>
                     <div class="a_p_c_follow">
                         <div>
                             <span>팔로워</span>
-                            <span>{{ accountInfo.follower? Object.keys(accountInfo.follower).length : 0 }}</span>
+                            <span>{{ accountInfo.value.follower? Object.keys(accountInfo.value.follower).length : 0 }}</span>
                         </div>
-                        <div v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">
+                        <div v-if="route.params.ids == useAuth.currentUser.uid">
                             <span>팔로잉</span>
-                            <span>{{ accountInfo.following? Object.keys(accountInfo.following).length : 0 }}</span>
+                            <span>{{ accountInfo.value.following? Object.keys(accountInfo.value.following).length : 0 }}</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="a_p_btns" >
-                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" class="a_p_btn_edit">프로필 수정</a>
-                <div v-if="route.params.ids != 'my' && route.params.ids != useAuth.currentUser.uid">
-                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.follower ||!accountInfo.follower[`${useAuth.currentUser.uid}`]" class="a_p_btn_follow">팔로우</a>
-                    <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.follower && accountInfo.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
+                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == useAuth.currentUser.uid" class="a_p_btn_edit">프로필 수정</a>
+                <div v-if="route.params.ids != useAuth.currentUser.uid">
+                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.value.follower ||!accountInfo.value.follower[`${useAuth.currentUser.uid}`]" class="a_p_btn_follow">팔로우</a>
+                    <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.value.follower && accountInfo.value.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
                 </div>
             </div>
         </div>
 
         <div class="a_playlist">
             <div class="a_pl_title">
-                <h3>내 플레이리스트</h3>
+                <h3>플레이리스트</h3>
             </div>
             <div class="a_playlistWrap">
                 <div class="a_pl_nolist" v-if="!plState">
                     <p>플레이리스트가 없습니다.</p>
-                    <button v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
+                    <button v-if="route.params.ids == useAuth.currentUser.uid" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
                 </div>
 
                 <div class="a_pl_makeList" v-if="makeListPage">
@@ -65,7 +65,7 @@
                                     <a href="/" @click.prevent="addTag">해시태그 추가</a>
                                 </div>
                                 <ul>
-                                    <li v-for="(item,key) in playlistContent.tag" :key="index">
+                                    <li v-for="(item,key) in playlistContent.tag" :key="key">
                                         #{{ key }}
                                         <a href="/" @click.prevent="removeTag(index)"></a>
                                     </li>
@@ -80,14 +80,14 @@
                 </div>
 
                 <ul v-if="plState" class="a_pl_list_wrap">
-                    <li class="a_pl_list_new" v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid">
+                    <li class="a_pl_list_new" v-if="route.params.ids == useAuth.currentUser.uid">
                         <div class="a_pl_btns">
                             <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
                         </div>
                         
                     </li>
 
-                    <li class="a_pl_list" v-for="item in Object.entries(myPlaylist).reverse()" :key="item[0]" >
+                    <li class="a_pl_list" v-for="item in Object.entries(accountInfo.value.playlist).reverse()" :key="item[0]" >
                         <div class="a_pl_listWrap">
                             <div class="a_pl_l_cover">
                                 <img :src="item[1].cover">
@@ -97,11 +97,11 @@
                             <div class="a_pl_l_content">
                                 <div class="a_pl_l_title">
                                     <p >{{ item[1].title }}</p>
-                                    <div v-if="route.params.ids == 'my' || route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
+                                    <div v-if="route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
                                         <button type="button" @click="clickOpen(item[0])">메뉴</button>
                                         <div class="sec1_title_menu" v-if="openMenuPop == item[0]">
                                             <a href="/" @click.prevent>수정</a>
-                                            <a href="/" @click.prevent>삭제</a>
+                                            <a href="/" @click.prevent="deleteList(item[0],item[1].tag)">삭제</a>
                                         </div>
                                     </div>
                                 </div>
@@ -133,63 +133,36 @@ import { useStore } from 'vuex';
 import { useRoute, useRouter } from 'vue-router';
     const route = useRoute();
     const router = useRouter();
-import { onBeforeMount,  reactive, ref, watch} from 'vue';
+import { onMounted,  reactive, ref, watch} from 'vue';
 import { onValue, ref as dataRef, update, push, get } from 'firebase/database';
 import { useDatabase, useAuth } from '../datasources/firebase.js';
-// ----------------------------------------------------------------------
-let pageUser = ref(''); // 현재 페이지의 유저
-let accountInfo = reactive({}); // 페이지 유저 정보
-let plState = ref(null) // 플레이리스트 존재 유무
+// ---------------------------------------------------------------------------------------------------------------
+let pageUser = ref('');         // 현재 페이지의 유저 (uid)
+let accountInfo = reactive({ value : {}});         // 페이지 유저 정보
+let plState = ref(null)          // 플레이리스트 존재 유무
 
-watch(() => route.params.ids, (cur) => {
-    if( cur == 'my' ) {
-        pageUser.value = useAuth.currentUser.uid;
-    } else {
-        pageUser.value = cur;
+pageUser.value = route.params.ids;
+onValue(dataRef(useDatabase,'account/' + route.params.ids), function(snapshot){
+    const data = snapshot.val();
+    accountInfo.value = {
+        photoURL : data.photoURL,
+        name: data.name,
+        id : data.id,
+        uid : data.uid,
+        follower : data.follower? data.follower : null,
+        following : data.following? data.following : null,
+        playlist : data.playlist
     }
-    onValue(dataRef(useDatabase,'account/' + pageUser.value), function(snapshot){
-        const data = snapshot.val();
-        accountInfo = {
-            photoURL : data.photoURL,
-            name: data.name,
-            id : data.id,
-            uid : data.uid,
-            follower : data.follower? data.follower : null,
-            following : data.following? data.following : null,
-            playlist : data.playlist
-        }
-        plState.value = accountInfo.playlist? true : false;
-        console.log('[onValue account] done')
-    })
-},{immediate:true, deep: true})
-
-const form = reactive({
-    account : route.params.ids == 'my'? store.getters.getAccount : store.getters.getDataUsers[route.params.ids],
-    playlists : store.getters.getDataPlaylists
+    for(const key in data.playlist){
+        get(dataRef(useDatabase,`playlists/${key}`)).then(snapshot => {
+            const data2 = snapshot.val();
+            accountInfo.value['playlist'][key] = data2;
+        })
+    }
+    plState.value = accountInfo.value.playlist? true : false;
+    console.log('[onValue account] done')
 })
-let myPlaylist = reactive({});
-watch(() => [form.account, form.playlists], (cur) => {
-    if (cur[0]) {
-        if (!cur[0]['playlist']){
-            plState.value = false
-        } else {
-            plState.value = true
-            const q = Object.keys(cur[0].playlist);
-            console.log(q)
-            for ( const val of q ){
-                if (cur[1][val]) {
-                    myPlaylist[val] = cur[1][val]
-                }
-            }     
-        }
-    }
-},{immediate: true, deep: true})
-//   playlist 구조 --> [
-//  {title : value},
-//  {cover : value},
-//  {totalLength : number(s)},
-//  {tag : [ string ... ]},
-//  {tracks: [ ]}
+
 
 // 플레이리스트 제작 칸 불러오기 //===========================================================================
 let makeListPage = ref(null);
@@ -219,7 +192,6 @@ const addTag = function(e){
     const v = e.target.value;
     if(v && !playlistContent.tag[v]){
         playlistContent.tag[v] = true
-        e.target.value = '';
     }
 }
 const removeTag = function(index){
@@ -262,24 +234,16 @@ const resetImg = () => {
 const saveMakeList = function(){
     const dbdb = dataRef(useDatabase, 'playlists');
     const postkey2 = push(dbdb,playlistContent).key;
+
     const updates2 = {};
-    updates2['account/' + useAuth.currentUser.uid + '/playlist/' + postkey2] = true
-    update(dataRef(useDatabase),updates2)
-
-    // const currentUserDataDb = dataRef(useDatabase,'account/' + useAuth.currentUser.uid + '/playlist');
-    //     const postkey = push(currentUserDataDb,playlistContent).key;
-    // const updates = {};
-    // updates['/playlists/' + postkey] = playlistContent;
-    // update(dataRef(useDatabase),updates);
-    
-    const tagEntry = Object.entries(playlistContent.tag);
+        updates2['account/' + useAuth.currentUser.uid + '/playlist/' + postkey2] = true
+    const tagEntry = Object.keys(playlistContent.tag);
     tagEntry.forEach(v => {
-            const hashDb = dataRef(useDatabase, `hashs/${v[1]}/${postkey2}`)
-            push(hashDb,true)
+        updates2[`hashs/${v}/${postkey2}`] = true
     })
-    
-
+    update(dataRef(useDatabase),updates2)
     makeListPage.value = false;
+
 }
 let openMenuPop = ref('');
 const clickOpen = function(k){
@@ -317,14 +281,23 @@ const totalLength = function(item){
     const text = `${minutes}분 ${seconds}초`;
     return text;
 }
+
+const deleteList = function(key,tags){
+    const updateDel = {};
+    // 1. account 에서 삭제
+    updateDel[`account/${useAuth.currentUser.uid}/playlist/${key}`] = null;
+    // 2. playlists 에서 삭제
+    updateDel[`playlists/${key}`] = null;
+    // 3. tag 에서 삭제
+    const tagArr = Object.keys(tags);
+    tagArr.forEach(v => { updateDel[`hashs/${v}/${key}`] = null });
+
+    update(dataRef(useDatabase),updateDel);
+}
 </script>
 
 <style scoped>
 #accountBox {
-    background:
-        linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
-            linear-gradient(240deg, transparent,red),
-            linear-gradient(45deg, transparent,yellow);
         padding-top: var(--main-top-padding) ;
         min-height: 100vh;
         box-sizing: border-box;

@@ -54,17 +54,19 @@
                             </li>
                         </ul>
                     </div>
-                    <div>
-                        <div class="sf_delete">
-                            <a href="/" @click.prevent="deleteChoice = true">계정 탈퇴</a>
-                            <div class="confirm_delete" v-if="deleteChoice">
-                                <p>계정을 삭제하시겠습니까? <br/> 다시 복구할 수 없습니다.</p>
-                                <p>
-                                    <button type="button" class="sf_d_yes" @click.prevent="store.dispatch('userDelete')">삭제</button>
-                                    <button type="button" class="sf_d_no" @click.prevent="deleteChoice = false">취소</button>
-                                </p>
-                            </div>
+                    <div class="sf_delete">
+                        <p>계정 탈퇴</p>
+                        <a href="/" @click.prevent="deleteChoice = true">계정 탈퇴</a>
+                        <div class="confirm_delete" v-if="deleteChoice">
+                            <p>계정을 삭제하시겠습니까? <br/> 다시 복구할 수 없습니다.</p>
+                            <p>
+                                <button type="button" class="sf_d_yes" @click.prevent="store.dispatch('userDelete')">삭제</button>
+                                <button type="button" class="sf_d_no" @click.prevent="deleteChoice = false">취소</button>
+                            </p>
                         </div>
+                    </div>
+                    <div class="sf_logout">
+                        <a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a>
                     </div>
                 </div>
             </div>
@@ -156,10 +158,6 @@ let deleteChoice = ref(false);
 
 <style scoped>
     #settingBox {
-        background:
-        linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
-            linear-gradient(240deg, transparent,red),
-            linear-gradient(45deg, transparent,yellow);
         padding-top: var(--main-top-padding) ;
         min-height: 100vh;
         box-sizing: border-box;
@@ -190,6 +188,7 @@ let deleteChoice = ref(false);
         align-items: center;
     }
     .sf_p_profile li > p,
+    .sf_delete > p,
     .sf_p_account li > p{
         width: 20%;
         text-align: end;
@@ -255,6 +254,12 @@ let deleteChoice = ref(false);
     .sf_p_p_id p{
         padding: 0.5rem 1rem;
     }
+    .sf_delete {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: center;
+    }
     .sf_delete a {
         color: red;
         background-color: white;
@@ -307,4 +312,12 @@ let deleteChoice = ref(false);
         margin-left: 2rem;
      }
     /* ---------------------------------------------------- */
+    .sf_logout a {
+        color: #a60a27;
+        border: 2px solid #a60a27;
+        font-size: 120%;
+        font-weight: 600;
+        padding: 0.6em 1em;
+        border-radius: 1em;
+    }
 </style>

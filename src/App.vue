@@ -31,7 +31,6 @@
               <ul>
                 <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
                 <li><a href="/" @click.prevent="goSetting">설정</a></li>
-                <li><a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
               </ul>
             </div>
           </div>
