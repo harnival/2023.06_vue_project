@@ -48,9 +48,9 @@ if("serviceWorker" in navigator) {
                 userVisibleOnly : true
             }
             reg.pushManager.subscribe(subscribeOption)
-            .then( res => console.log(res));
+            .then( res => console.log("[subscription]" , res));
         } else {
-            console.log('[service worker] subscribe exists - ' +reg.pushManager.getSubscription() )
+            console.log('[service worker] subscribe exists - ' ,reg.pushManager.getSubscription() )
         }
     })
     
@@ -71,3 +71,5 @@ if( !("Notification" in window)) {
 } else if( Notification.permission == "denied") {
     console.log("[notification] denied");
 }
+
+// 

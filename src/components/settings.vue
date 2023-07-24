@@ -3,10 +3,6 @@
         <div class="settingBoxWrap">
             <div class="settingMenu">
                 <h3>설정</h3>
-                <ul>
-                    <!-- <li><a href="/" @click.prevent>정보 수정</a></li> -->
-                    <!-- <li><a href="/" @click.prevent>알림 설정</a></li> -->
-                </ul>
             </div>
             <div class="settingFrame">
                 <div class="sf_private">
@@ -69,6 +65,14 @@
                         <a href="/" @click.prevent="store.dispatch('logout')">로그아웃</a>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="settingBoxWrap">
+            <div class="settingMenu">
+                <h3>알림설정</h3>
+            </div>
+            <div class="settingFrame">
+
             </div>
         </div>
     </div>

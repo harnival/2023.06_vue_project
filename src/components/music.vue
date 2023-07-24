@@ -3,6 +3,9 @@
         <div id="youtubePlayer"></div>
         <div class="musicBoxWrap">
             <div class="searchBox">
+                <div class="sb_title">
+                    <h3>음악검색</h3>
+                </div>
                 <div class="sb_inputWrap">
                     <div class="focusLine"></div>
                     <div class="inputBox_sb">
@@ -13,6 +16,9 @@
             </div>
             
             <ul class="musicList_wrap">
+                <li>
+                    <p>검색 결과 : {{  }}</p>
+                </li>
                 <li class="ml_empty" v-if="emptyResult">
                     <p>검색 결과가 없습니다.</p>
                 </li>
@@ -383,19 +389,22 @@ const watchNowTime = function(){
 
 <style scoped>
 #musicBox {
+    padding-top: var(--main-top-padding);
     min-height: 100vh;
 }
 .musicBoxWrap {
-    width: 80%;
-    max-width: 1280px;
-    margin: auto;
     background-color: rgba(0, 0, 0, 0.61);
+    width: 100%;
+    margin: auto;
     min-height: 100vh;
-    padding: 5vh 2rem;
+    /* padding: 5vh 2rem; */
+    box-sizing: border-box;
 }
 .popularMusicList {
     padding: 0;
     position: relative;
+    width: 70%;
+    margin: auto;
 }
 .popularTextLi {
     text-align: start;
@@ -409,7 +418,7 @@ const watchNowTime = function(){
 .musicList_wrap {
     width: 70%;
     margin: auto;
-    background-color: black;
+    /* background-color: black; */
 }
 .musicList {
     position: relative;
@@ -609,14 +618,28 @@ const watchNowTime = function(){
     display: flex;
     justify-content: center;
     box-sizing: border-box;
-    border-radius: 2rem;
+    /* border-radius: 2rem; */
     background-color: white;
     margin: 10% auto;
     padding: 1rem 0;
     height: fit-content;
 }
+.sb_title{
+    position: absolute;
+    bottom: 100%;
+    left: 15%;
+    font-size: 250%;
+    color: white;
+    width: 70%;
+    font-family: 'NanumSquareNeoBold';
+}
+.sb_title h3 {
+    text-align: left;
+    line-height: 1;
+}
 .sb_inputWrap {
-    width: 80%;
+    width: 70%;
+    margin: auto;
     position: relative;
 }
 .searchBox input {

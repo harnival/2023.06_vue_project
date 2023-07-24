@@ -1,129 +1,133 @@
 <template>
     <div id="accountBox">
-        <div class="a_profile">
-            <div class="a_p_content">
-                <div class="a_p_c_image">
-                    <img :src="accountInfo.value.photoURL" alt="">
-                </div>
-                <div class="a_p_c_text">
-                    <div class="a_p_c_name">
-                        <strong class="a_p_c_n_name">{{ accountInfo.value.name }}</strong>
-                        <span class="a_p_c_n_id">@{{ accountInfo.value.id }}</span>
-                    </div>
-                    <div class="a_p_c_follow">
-                        <div>
-                            <span>팔로워</span>
-                            <span>{{ accountInfo.value.follower? Object.keys(accountInfo.value.follower).length : 0 }}</span>
+        <div class="a_container">
+            <div class="a_con_section">
+                <div class="a_profile">
+                    <div class="a_p_content">
+                        <div class="a_p_c_image">
+                            <img :src="accountInfo.value.photoURL" alt="">
                         </div>
-                        <div v-if="route.params.ids == useAuth.currentUser.uid">
-                            <span>팔로잉</span>
-                            <span>{{ accountInfo.value.following? Object.keys(accountInfo.value.following).length : 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="a_p_btns" >
-                <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == useAuth.currentUser.uid" class="a_p_btn_edit">프로필 수정</a>
-                <div v-if="route.params.ids != useAuth.currentUser.uid">
-                    <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.value.follower ||!accountInfo.value.follower[`${useAuth.currentUser.uid}`]" class="a_p_btn_follow">팔로우</a>
-                    <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.value.follower && accountInfo.value.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="a_playlist">
-            <div class="a_pl_title">
-                <h3>플레이리스트</h3>
-            </div>
-            <div class="a_playlistWrap">
-                <div class="a_pl_nolist" v-if="!plState">
-                    <p>플레이리스트가 없습니다.</p>
-                    <button v-if="route.params.ids == useAuth.currentUser.uid" type="button" class="a_pl_newlist1" @click.prevent="makeList1"><strong>+ </strong> 새 플레이리스트 추가</button>
-                </div>
-
-                <div class="a_pl_makeList" v-if="makeListPage">
-                    <form @submit.prevent="saveMakeList">
-                        <div class="a_pl_m_cover" @click="openFile">
-                            <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
-                            <img src="" class="a_pl_m_c_image"  v-if="!clickme">
-                            <div class="a_pl_m_cover_before"  v-if="clickme">
-                                <img src="../assets/img/plus.png" alt="" style="opacity:0.5">
-                                <p>
-                                    - 클릭하여 이미지를 선택해주세요. <br/>
-                                    - 미입력 시, 플레이리스트에 추가된 트랙의 앨범 이미지로 대체됩니다.
-                                </p>
+                        <div class="a_p_c_text">
+                            <div class="a_p_c_name">
+                                <strong class="a_p_c_n_name">{{ accountInfo.value.name }}</strong>
+                                <span class="a_p_c_n_id">@{{ accountInfo.value.id }}</span>
                             </div>
-                        </div>
-                        <div class="a_pl_m_textWrap">
-                            <div class="a_pl_m_text">
-                                <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
-                            </div>
-                            <div class="a_pl_m_tag">
-                                <p>#태그 추가</p>
-                                <div class="a_pl_m_tag_inputwrap">
-                                    <input type="text" @change="addTag" placeholder="#">
-                                    <a href="/" @click.prevent="addTag">해시태그 추가</a>
+                            <div class="a_p_c_follow">
+                                <div>
+                                    <span>팔로워</span>
+                                    <span>{{ accountInfo.value.follower? Object.keys(accountInfo.value.follower).length : 0 }}</span>
                                 </div>
-                                <ul>
-                                    <li v-for="(item,key) in playlistContent.tag" :key="key">
-                                        #{{ key }}
-                                        <a href="/" @click.prevent="removeTag(index)"></a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="a_pl_m_btn">
-                                <button type="submit" class="a_pl_m_btn_submit">생성하기</button>
+                                <div v-if="route.params.ids == useAuth.currentUser.uid">
+                                    <span>팔로잉</span>
+                                    <span>{{ accountInfo.value.following? Object.keys(accountInfo.value.following).length : 0 }}</span>
+                                </div>
                             </div>
                         </div>
-                        <button type="button" @click="cancelMake" class="a_pl_m_cancel">취소</button>
-                    </form>
+                    </div>
+                    <div class="a_p_btns" >
+                        <a href="/" @click.prevent="router.push({name: 'setting'})" v-if="route.params.ids == useAuth.currentUser.uid" class="a_p_btn_edit">프로필 수정</a>
+                        <div v-if="route.params.ids != useAuth.currentUser.uid">
+                            <a href="/" @click.prevent="clickToFollow" v-if="!accountInfo.value.follower ||!accountInfo.value.follower[`${useAuth.currentUser.uid}`]" class="a_p_btn_follow">팔로우</a>
+                            <a href="/" @click.prevent="clickToDeleteFollow" v-if="accountInfo.value.follower && accountInfo.value.follower[`${useAuth.currentUser.uid}`]">팔로우 취소</a>
+                        </div>
+                    </div>
                 </div>
-
-                <ul v-if="plState" class="a_pl_list_wrap">
-                    <li class="a_pl_list_new" v-if="route.params.ids == useAuth.currentUser.uid">
-                        <div class="a_pl_btns">
-                            <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
+            </div>
+            <div class="a_pl_section">
+                <div class="a_playlist">
+                    <div class="a_pl_title">
+                        <h3>플레이리스트</h3>
+                        <div class="a_pl_list_new" v-if="route.params.ids == useAuth.currentUser.uid">
+                            <div class="a_pl_btns">
+                                <a href="/" @click.prevent="makeList2">+ 새 플레이리스트 만들기</a>
+                            </div>                        
                         </div>
-                        
-                    </li>
+                    </div>
 
-                    <li class="a_pl_list" v-for="item in Object.entries(accountInfo.value.playlist).reverse()" :key="item[0]" >
-                        <div class="a_pl_listWrap">
-                            <div class="a_pl_l_cover">
-                                <img :src="item[1].cover">
-                                <button type="button" @click.prevent="router.push({name : 'player', params : {listkey : item[0]}})">플레이리스트 재생</button>
-
-                            </div>
-                            <div class="a_pl_l_content">
-                                <div class="a_pl_l_title">
-                                    <p >{{ item[1].title }}</p>
-                                    <div v-if="route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
-                                        <button type="button" @click="clickOpen(item[0])">메뉴</button>
-                                        <div class="sec1_title_menu" v-if="openMenuPop == item[0]">
-                                            <a href="/" @click.prevent>수정</a>
-                                            <a href="/" @click.prevent="deleteList(item[0],item[1].tag)">삭제</a>
+                    <div class="a_playlistWrap">
+                        <div class="a_pl_nolist" v-if="!plState">
+                            <p>플레이리스트가 없습니다.</p>
+                        </div>
+        
+                        <div class="a_pl_makeList" v-if="makeListPage">
+                            <form @submit.prevent="saveMakeList">
+                                <div class="a_pl_m_cover" @click="openFile">
+                                    <input type="file" name="cover_img" id="a_pl_m_coverInput" @input="uploadImg" accept="image/*">
+                                    <img src="" class="a_pl_m_c_image"  v-if="!clickme">
+                                    <div class="a_pl_m_cover_before"  v-if="clickme">
+                                        <img src="../assets/img/plus.png" alt="" style="opacity:0.5">
+                                        <p>
+                                            - 클릭하여 이미지를 선택해주세요. <br/>
+                                            - 미입력 시, 플레이리스트에 추가된 트랙의 앨범 이미지로 대체됩니다.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="a_pl_m_textWrap">
+                                    <div class="a_pl_m_text">
+                                        <input type="text" name="" id="" v-model="playlistContent.title" placeholder="제목을 입력하세요." required>
+                                    </div>
+                                    <div class="a_pl_m_tag">
+                                        <p>#태그 추가</p>
+                                        <div class="a_pl_m_tag_inputwrap">
+                                            <input type="text" @change="addTag" placeholder="#">
+                                            <a href="/" @click.prevent="addTag">해시태그 추가</a>
+                                        </div>
+                                        <ul>
+                                            <li v-for="(item,key) in playlistContent.tag" :key="key">
+                                                #{{ key }}
+                                                <a href="/" @click.prevent="removeTag(index)"></a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="a_pl_m_btn">
+                                        <button type="submit" class="a_pl_m_btn_submit">생성하기</button>
+                                    </div>
+                                </div>
+                                <button type="button" @click="cancelMake" class="a_pl_m_cancel">취소</button>
+                            </form>
+                        </div>
+        
+                        <ul v-if="plState" class="a_pl_list_wrap">
+                            
+        
+                            <li class="a_pl_list" v-for="item in Object.entries(accountInfo.value.playlist).reverse()" :key="item[0]" >
+                                <div class="a_pl_listWrap">
+                                    <div class="a_pl_l_cover">
+                                        <img :src="item[1].cover">
+                                        <button type="button" @click.prevent="router.push({name : 'player', params : {listkey : item[0]}})">플레이리스트 재생</button>
+        
+                                    </div>
+                                    <div class="a_pl_l_title">
+                                        <div>
+                                            <p >{{ item[1].title }}</p>
+                                            <div v-if="route.params.ids == useAuth.currentUser.uid" class="pl_title_btn">
+                                                <button type="button" @click="clickOpen(item[0])">메뉴</button>
+                                                <div class="sec1_title_menu" v-if="openMenuPop == item[0]">
+                                                    <a href="/" @click.prevent>수정</a>
+                                                    <a href="/" @click.prevent="deleteList(item[0],item[1].tag)">삭제</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="a_pl_l_content">
+                                        <div class="a_pl_l_text">
+                                            <span>총 {{item[1].tracks? Object.entries(item[1].tracks).length : 0 }}곡</span>
+                                            <span>{{  totalLength(item[1].tracks) }}</span>
+                                        </div>
+                                        <div class="a_pl_l_tag">
+                                            <ul>
+                                                <li v-for="(tags,tagkey) in item[1].tag"># {{ tagkey }}</li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="a_pl_l_text">
-                                    <span>총 {{item[1].tracks? Object.entries(item[1].tracks).length : 0 }}곡</span>
-                                    <span>{{  totalLength(item[1].tracks) }}</span>
-                                </div>
-                                <div class="a_pl_l_tag">
-                                    <ul>
-                                        <li v-for="(tags,tagkey) in item[1].tag"># {{ tagkey }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </li> 
-
-                </ul>
+                            </li> 
+        
+                        </ul>
+                    </div>
+                </div>
             </div>
-
-            
         </div>
-       
     </div>
 </template>
 
@@ -302,20 +306,28 @@ const deleteList = function(key,tags){
         min-height: 100vh;
         box-sizing: border-box;
 }
+.a_container{
+    background-color: rgb(0,0,0,0.8);
+}
+.a_con_section {
+    width: 100%;
+}
     .a_profile {
+        border-bottom: 1px solid rgb(255,210,11);
         display: flex;
-        width: 80%;
-        max-width: 1280px;
+        width: 70%;
+        /* max-width: 1280px; */
         margin: auto;
-        background-color: var(--main-color1);
-        border-radius: 1rem;
-        padding: 2rem 8%;
+        /* background-color: var(--main-color1); */
+        color: #e0e0e0;
+        /* border-radius: 1rem; */
+        padding: 3% 5%;
         box-sizing: border-box;
         position: relative;
     }
     .a_p_content {
         display: flex;
-        width: 80%;
+        width: 100%;
     }
     .a_p_btns {
         position: absolute;
@@ -328,10 +340,11 @@ const deleteList = function(key,tags){
         width: 1.5rem;
         aspect-ratio: 1/1;
         background: url('../assets/img/pencil.svg') no-repeat center/contain;
+        filter: invert(100%);
     }
     .a_p_btn_edit:hover {
         opacity: 0.8;
-        border-bottom: 1px solid rgb(0,0,0,0.6);
+        border-bottom: 1px solid rgb(0,0,0);
     }
     .a_p_btn_follow {
         display: block;
@@ -342,6 +355,7 @@ const deleteList = function(key,tags){
     }
     .a_p_c_image {
         width: max(100px, 10vw);
+        height: max(100px, 10vw);
         aspect-ratio: 1/1;
         border: 1px solid rgba(0, 0, 0, 0.3);
         border-radius: 50%;
@@ -370,7 +384,6 @@ const deleteList = function(key,tags){
     }
     .a_p_c_n_id {
         font-size: 100%;
-        color: #000000b7;
     }
     .a_p_c_follow {
         display: flex;
@@ -384,30 +397,35 @@ const deleteList = function(key,tags){
 
     /* 2.playlist------------------------------------------------ */
     .a_playlist {
-        display: block;
-        width: 80%;
+        width: 100%;
         margin: auto;
         padding-top: 5%;
     }
     .a_pl_title{
+        width: 70%;
+        margin: auto;
         display: flex;
         justify-content: space-between;
         align-items: center;
         color: white;
+    }
+    .a_pl_title h3{
         font-size: 150%;
         font-family: 'NanumSquareNeoBold';
+
     }
    
     .a_playlistWrap {
         position: relative;
-        border-radius: 1rem;
-        background-color: rgba(255, 255, 255, 0.63);
+        /* background-color: rgba(255, 255, 255, 0.63); */
+        background-color: black;
         padding: 1rem;
         box-sizing: border-box;
     }
     .a_pl_nolist {
-        width: 100%;
+        width: 70%;
         height: 100%;
+        margin: auto;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -415,7 +433,8 @@ const deleteList = function(key,tags){
 
     }
     .a_playlistWrap > ul {
-        width: 100%;
+        width: 70%;
+        margin: auto;
         display: flex;
         flex-wrap: wrap;
     }
@@ -428,7 +447,6 @@ const deleteList = function(key,tags){
         padding: 0.5em 1em;
         border-radius: 1em;
     }
-    .a_pl_list_new,
     .a_pl_list {
         width: calc(100% / 4);
         box-sizing: border-box;
@@ -440,24 +458,27 @@ const deleteList = function(key,tags){
         justify-content: center;
         align-items: center;
         text-decoration: none;
-        color: black;
+        /* color: black; */
         transition: .3s ease;
+        background-color: white;
     }
     .a_pl_btns a:hover {
         background-color: white;
         color: #666;
     }
     .a_pl_btns {
-        margin: 1rem;
-        border: 2px dashed #333;
-        box-sizing: border-box;
-        background-color: white;
-        height: calc(45vh - 2rem);
+        /* border: 2px dashed #333; */
+        /* box-sizing: border-box; */
+        /* background-color: white; */
+        font-size: 100%;
     }
     .a_pl_listWrap {
-        margin: 1rem;
+        /* margin: 1rem; */
         transition: .2s ease;
-        padding-bottom: 2rem;
+        /* padding-bottom: 2rem; */
+        position: relative;
+        /* border-radius: 1rem;
+        overflow: hidden; */
     }
     .a_pl_listWrap:hover{
         transform: scale(1.02,1.02);
@@ -469,9 +490,11 @@ const deleteList = function(key,tags){
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        margin: 0 auto 1rem;
+        margin: 0 auto;
         position: relative;
-        border-radius: 2rem;
+        /* border-radius: 2rem; */
+
+        background-color: white;
     }
     .a_pl_l_cover button {
         position: absolute;
@@ -482,7 +505,7 @@ const deleteList = function(key,tags){
         aspect-ratio: 1/1;
         border-radius: 50%;
         border: none;
-        opacity: 0.6;
+        /* opacity: 0.6; */
         background: #ddd url('../assets/img/play.svg') no-repeat center / 80%;
 
     }
@@ -490,25 +513,36 @@ const deleteList = function(key,tags){
         width: 100%;
     }
     .a_pl_l_content {
-        background-color: white;
+        /* background-color: white; */
         padding: 1rem;
         box-sizing: border-box;
-        border-radius: 1rem;
+        /* border-radius: 1rem; */
     }
     .a_pl_l_text {
         display: flex;
         justify-content: space-between;
-        color: #666;
+        /* color: #666; */
+        color: #e0e0e0;
         font-size: 90%;
-        padding: 1rem 2rem;
+        /* padding: 1rem 2rem; */
     }
-   
-    .a_pl_l_title {
+    .a_pl_l_title{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgb(0,0,0,0.7);
+    }
+    .a_pl_l_title > div{
         display: flex;
         justify-content: space-between;
         font-size: 100%;
+        color: white;
+        max-height: 2.5em;
+        padding: 0.4em;
+        box-sizing: border-box;
     }
-    .a_pl_l_title > p {
+    .a_pl_l_title  p {
         font-size: 120%;
         font-weight: 500;
         text-overflow: ellipsis;
@@ -522,15 +556,18 @@ const deleteList = function(key,tags){
     }
     .a_pl_m_tag li,
     .a_pl_l_tag li {
-        background-color: rgba(35,26,144,0.3);
+        /* background-color: rgba(35,26,144,0.3); */
+        background-color: rgba(166, 10, 39, 0.7);
         padding: 0.2em 0.5em;
         border-radius: 0.5em;
-        color: #333;
+        color: #e0e0e0;
+        /* color: #333; */
     }
     /* .a_pl_list_new.activated {
         width: 100%;
         padding: 1rem;
     } */
+    /* ========================================================= */
     .a_pl_makeList {
         padding: 1rem;
         box-sizing: border-box;

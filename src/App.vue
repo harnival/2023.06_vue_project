@@ -25,7 +25,7 @@
             <div class="nav_a_menuWrap">
               <ul>
                 <li><a href="/" @click.prevent="goHome">홈</a></li>
-                <!-- <li><a href="/" @click.prevent="goPlaylist">탐색</a></li> -->
+                <li><a href="/" @click.prevent="goPlaylist">탐색</a></li>
                 <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
               </ul>
               <ul>
@@ -155,7 +155,7 @@ const goSetting = function(){
   --inputwrap-label-bg: #f0f0fd;
   --main-color1:rgb(255, 210, 11);
   --header-height: 7vh;
-  --main-top-padding: 13rem;
+  --main-top-padding: 10rem;
 }
 body {
   margin: 0;
@@ -240,6 +240,7 @@ label.label_value {
   position: relative;
 }
 .pl_title_btn button {
+  filter: invert(100%);
   width: 100%;
   height: 100%;
   display: block;
@@ -249,27 +250,32 @@ label.label_value {
 }
 .sec1_title_menu {
         position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
+        /* top: 50%; */
+        top: 0;
+        /* transform: translateY(-50%); */
         right: 110%;
 
-        font-size: 80%;
+        font-size: 90%;
         font-weight: 500;
         word-break: keep-all;
         display: flex;
         flex-direction: column;
-        background-color: rgba(0,0,0,0.3);
+        /* background-color: rgba(0,0,0,0.3); */
+        background-color: rgb(255,255,255,0.9);
         backdrop-filter: blur(10px);
         overflow: hidden;
         border-radius: 0.5rem;
+
+        box-shadow: 2px 1px 3px 0px rgba(0, 0, 0, 0.63);
     }
     .sec1_title_menu a {
         text-decoration: none;
         color: black;
-        padding: 0.2em 1.5em;
+        padding: 0.7em 2.5em;
     }
     .sec1_title_menu a:hover{
-        background-color: rgba(255,255,255,0.3);
+        /* background-color: rgba(255,255,255,0.3); */
+        background-color: rgb(0,0,0,0.3);
     }
 </style>
 
@@ -383,6 +389,7 @@ box-sizing: border-box;
 }
 .nav_a_avatar {
   height: 6vh;
+  width: 6vh;
   aspect-ratio: 1/1;
   border-radius: 50%;
   overflow: hidden;
@@ -405,6 +412,7 @@ box-sizing: border-box;
   display: flex;
   align-items: center;
   word-break: keep-all;
+  white-space: nowrap;
   min-width: 5vw;
   z-index: 1;
 }

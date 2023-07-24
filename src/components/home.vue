@@ -9,7 +9,6 @@
                 </div>
     
                 <div class="sec_content">
-    
                     <div class="nolist" v-if="!listState">
                         <span>플레이리스트가 없습니다.</span>
                     </div>
@@ -26,17 +25,17 @@
                                         <img :src="item.cover">
                                         <button type="button" @click.prevent="router.push({name: 'player', params : {listkey : key}})">플레이리스트 재생</button>
                                     </div>
-                                    <div class="sec_list_text">
-                                        <p class="sec1_l_t_title">
-                                            <p class="sec1_l_t_t_wrap">{{ item.title }}</p>
-                                            <div v-if="item.uid == useAuth.currentUser.uid" class="pl_title_btn">
-                                                <button type="button" @click="clickOpen(key)">메뉴</button>
-                                                <div class="sec_title_menu" v-if="openMenuPop == key">
-                                                    <a href="/" @click.prevent>수정</a>
-                                                    <a href="/" @click.prevent="deleteList(key)">삭제</a>
-                                                </div>
+                                    <p class="sec1_l_t_title">
+                                        <p class="sec1_l_t_t_wrap">{{ item.title }}</p>
+                                        <div v-if="item.uid == useAuth.currentUser.uid" class="pl_title_btn">
+                                            <button type="button" @click="clickOpen(key)">메뉴</button>
+                                            <div class="sec1_title_menu" v-if="openMenuPop == key">
+                                                <a href="/" @click.prevent>수정</a>
+                                                <a href="/" @click.prevent="deleteList(key)">삭제</a>
                                             </div>
-                                        </p>
+                                        </div>
+                                    </p>
+                                    <div class="sec_list_text">
                                         <p class="sec1_l_t_sub">
                                             <span>총 {{item.tracks? Object.entries(item.tracks).length : 0 }}곡</span>
                                             <span>{{  totalLength(item.tracks) }}</span>
@@ -60,10 +59,10 @@
                 <div class="sec_title">
                     <h3># 인기 해시</h3>
                 </div>
-                <div class="sec_content2" v-for="(item,key) in popularHashList">
+                <div class="sec_content" v-for="(item,key) in popularHashList">
                     <div class="hash_title">
                         <p># {{ key }}</p>
-                        <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
+                        <!-- <a href="/" class="sec_title_btn" @click.prevent>더 보기</a> -->
                     </div>
                     <div class="slideBox">
                         <div class="slideBtnBox">
@@ -83,10 +82,10 @@
                                             <div class="sec_l_m_name">{{ store.getters.getDataUsers[store.getters.getDataPlaylists[items].uid].name }}</div>
                                         </div>
                                     </div>
+                                    <p class="sec1_l_t_title">
+                                        <p class="sec1_l_t_t_wrap">{{ store.getters.getDataPlaylists[items].title }}</p>
+                                    </p>
                                     <div class="sec_list_text">
-                                        <p class="sec1_l_t_title">
-                                            <p class="sec1_l_t_t_wrap">{{ store.getters.getDataPlaylists[items].title }}</p>
-                                        </p>
                                         <p class="sec1_l_t_sub">
                                             <span>총 {{store.getters.getDataPlaylists[items].tracks? Object.entries(store.getters.getDataPlaylists[items].tracks).length : 0 }}곡</span>
                                             <span>{{ store.getters.getDataPlaylists[items].totalLength? store.getters.getDataPlaylists[items].totalLength : 0 }}</span>
@@ -109,7 +108,56 @@
             <div class="sectionWrap">
                 <div class="sec_title">
                     <h3>팔로워</h3>
-                    <a href="/" class="sec_title_btn" @click.prevent>더 보기</a>
+                    <a href="/" class="sec_title_btn" v-if="f_user" @click.prevent="router.push({name: 'account', params: {ids : f_user}})">더 보기</a>
+                </div>
+                <div class="sec_content" v-if="f_user">
+                    <div class="following_title">
+                        <p>@{{ f_user }} 님의 플레이리스트</p>
+                    </div>
+                    <div class="nolist" v-if="f_list_empty">
+                        <span>플레이리스트가 없습니다.</span>
+                    </div>
+
+                    <div v-if="!f_list_empty" class="slideBox">
+                        <div class="slideBtnBox">
+                            <button type="button" class="leftArrow" @click="rightBtn"></button>
+                            <button type="button" class="rightArrow" @click="leftBtn"></button>
+                        </div>
+                        <div class="sec_list_wrap" >
+                            <ul >
+                                <li v-for="item in f_userPl" class="sec_list" :key="key">
+                                    <div class="sec_list_image">
+                                        <img :src="item.cover">
+                                        <button type="button" @click.prevent="router.push({name: 'player', params : {listkey : key}})">플레이리스트 재생</button>
+                                    </div>
+                                    <p class="sec1_l_t_title">
+                                        <p class="sec1_l_t_t_wrap">{{ item.title }}</p>
+                                        <div v-if="item.uid == useAuth.currentUser.uid" class="pl_title_btn">
+                                            <button type="button" @click="clickOpen(key)">메뉴</button>
+                                            <div class="sec1_title_menu" v-if="openMenuPop == key">
+                                                <a href="/" @click.prevent>수정</a>
+                                                <a href="/" @click.prevent="deleteList(key)">삭제</a>
+                                            </div>
+                                        </div>
+                                    </p>
+                                    <div class="sec_list_text">
+                                        <p class="sec1_l_t_sub">
+                                            <span>총 {{item.tracks? Object.entries(item.tracks).length : 0 }}곡</span>
+                                            <span>{{  totalLength(item.tracks) }}</span>
+                                        </p>
+                                        <p class="sec1_l_t_tag">
+                                            <ul>
+                                                <li v-for="(tag,tagkey) in item.tag">#{{ tagkey }}</li>
+                                            </ul>
+                                        </p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="sec_content" v-if="!f_user">
+                    <p class="noFollowing">아직 팔로우 한 계정이 없습니다.</p>
                 </div>
             </div>
         </div>
@@ -151,6 +199,7 @@ import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
     const router = useRouter();
 // varient ==============================================================
+const userUid = useAuth.currentUser.uid; //로그인한 계정의 uid
 let myPlaylist = reactive({});  // 로그인한 계정의 플레이리스트 목록
 let listState = ref(true)   // 로그인한 계정의 플레이리스트 유무
 const form = reactive({
@@ -160,7 +209,9 @@ const form = reactive({
 let popularHashList = reactive({});     // 해시태그 중 플레이리스트 수가 가장 많은 순서 목록
 let openMenuPop = ref('');      // 지금 메뉴가 열려있는 플레이리스트의 키 값
 let openmodal = ref(false);     // 플레이리스트 수정 창 온오프
-
+let f_user = ref(null);     // 랜덤한 팔로잉 계정의 uid
+let f_userPl = reactive({value:[]})     // 랜덤한 팔로잉 계정의 플레이리스트
+let f_list_empty = ref(false);
 // function ===============================================================
 const clickOpen = function(k){  // 플레이리스트 메뉴 온오프
     openMenuPop.value = openMenuPop.value == k? null : k
@@ -276,6 +327,24 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
     })
 },{immediate: true, deep : true})
 
+const findRandomFollow = function(){
+    get(dataRef(useDatabase,`account/${userUid}/following`)).then(snapshot => {
+        const data = snapshot.val();
+        const f_list = Object.keys(data);
+        const i = Math.floor(Math.random() * f_list.length);
+        
+        return f_list[i];
+    }).then(user => {
+        f_user.value = user;
+        get(dataRef(useDatabase,`account/${user}/playlist`)).then(v => {
+            const data2 = Object.keys(v.val());
+            if(data2.length == 0){
+                f_list_empty.value = true
+            }
+            f_userPl.value = data2;
+        })
+    })
+}
 </script>
 
 <style scoped>
@@ -426,6 +495,8 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+
+            position: relative;
         }
         .sec_list_image{
             width: 100%;
@@ -435,9 +506,9 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
             align-items: center;
             position: relative;
             background-color: rgba(0,0,0,0.9);
-            margin-bottom: 0.5rem;
-            border-radius: 1rem;
-            overflow: hidden;
+            /* margin-bottom: 0.5rem; */
+            /* border-radius: 1rem; */
+            /* overflow: hidden; */
         }
         .sec_list_image img {
             width: 100%;
@@ -456,29 +527,39 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
     
         }
         .sec_list_text {
-            background-color: rgb(255,255,255,0.9);
+            /* background-color: rgb(255,255,255,0.9); */
             backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            padding: 1rem;
+            /* border-radius: 1rem; */
+            /* padding: 1rem; */
+            padding: 1rem 0;
             flex: 1;
         }
         .sec1_l_t_title {
-            
             margin-bottom: 1rem;
-            padding-right: 0.5rem;
+            /* padding-right: 0.5rem; */
             display: flex;
             justify-content: space-between;
+
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgb(0,0,0,0.7);
+            color: white;
         }
         .sec1_l_t_t_wrap {
-            font-size: 120%;
-            font-weight: 600;
+            font-size: 100%;
+            /* font-weight: 600; */
             word-break: keep-all;
             white-space: nowrap;
+            padding: 0.4em;
+            max-height: 2.5em;
+            box-sizing: border-box;
         }
         .pl_title_btn {
             position: relative;
         }
-        .sec_title_menu {
+        /* .sec_title_menu {
             position: absolute;
             top: 0%;
             right: 110%;
@@ -496,23 +577,33 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
         }
         .sec_title_menu a:hover {
             background-color: rgb(255,255,255,0.3);
-        }
+        } */
         .sec1_l_t_sub {
             font-size: 90%;
-            color: #666;
+            color: #e0e0e0;
+            /* color: #666; */
             display: flex;
             justify-content: space-between;
-            padding: 1em 1em;
+            /* padding: 1em 1em; */
         }
         .sec1_l_t_tag ul{
             display: flex;
             flex-wrap: wrap;
             gap: 1rem;
+
+            padding: 1rem 0.5rem 0;
         }
         .sec1_l_t_tag li {
-            background-color: #ffd20b;
+            /* background-color: #ffd20b;
             padding: 0 1em;
+            border-radius: 0.5em; */
+
+            /* background-color: rgba(166, 10, 39, 0.7); */
+            background-color: black;
+            padding: 0.4em 1em;
             border-radius: 0.5em;
+            color: #e0e0e0;
+            font-weight: 400;
         }
         /* ---------------------------------------------------- */
         .sec2_title {
@@ -525,13 +616,37 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
             display: flex;
             justify-content: space-between;
             align-items: center;        
-            padding: 0 2rem 1rem;
+            padding: 1rem 0;
         }
         .hash_title p{
             font-family: 'Oswald', 'Noto Sans KR';
             font-size: 150%;
+            /* color: white; */
+            color: black;
+            background-color: white;
+            padding:0 2em;
+            border-radius: 0.5em;
+            cursor: pointer;
+            transition: .3s ease;
+            position: relative;
+        }
+        .hash_title p:hover {
+            background-color: #bbbbbb;
+        }
+        .hash_title p:hover::before {
+            content: "더 보기";
+            position: absolute;
+            top: 0;
+            left: 110%;
+            display: block;
+            background-color: #666666b4;
             color: white;
-            
+            font-size: 80%;
+            font-family: 'NanumBarunGothic';
+            word-break: keep-all;
+            white-space: nowrap;
+            padding: 0.5em 1em;
+            border-radius: 0.5em;
         }
         .slideBox {
             position: relative;
@@ -539,7 +654,14 @@ watch(() => store.getters.getDataHashs, (cur) => {  // 해시태그 순위 실�
         .nolist { 
             height: 40vh;
         }
-@media screen and (max-width: 1024px){
-
-}
+        /* =================================== */
+        .noFollowing {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #aaa;
+            font-size: 120%;
+            width: 100%;
+            padding: 2rem 0;
+        }
 </style>
