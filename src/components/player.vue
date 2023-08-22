@@ -7,7 +7,7 @@
                     <Transition>
                         <div class="pr_title" v-show="show">
                             <p class="pr_t_title">
-                                <button type="button" class="goBackBtn">뒤로가기</button>
+                                <button type="button" class="goBackBtn" @click.prevent="$router.go(-1)">뒤로가기</button>
                                 <span>{{ listInfo.title }}</span>
                             </p>
                             <p class="pr_t_maker">
@@ -338,6 +338,9 @@
         font-size: 200%;
         padding-bottom: 0.5em;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
     .pr_t_maker {
         height: 30%;
@@ -550,5 +553,13 @@
     }
     .p_list > ul > li {
         padding-top: 1rem;
+    }
+    .goBackBtn{
+        border: 0;
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0;
+        background: url('../assets/img/arrow_back_3.png') no-repeat center/contain;
+        filter: invert(100%);
     }
 </style>

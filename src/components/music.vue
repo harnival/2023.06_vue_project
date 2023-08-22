@@ -101,7 +101,7 @@
                         </div>
                     </div>
                     <div class="ml_menu">
-                        <button type="button" class="ml_m_add listup" @click="clickAdd(item.id)">플레이리스트에 추가</button>
+                        <button type="button" class="ml_m_add listup" @click.prevent="clickAdd(item.id)">플레이리스트에 추가</button>
                         <div class="ml_m_mylist" v-if="openAddPop == item.id">
                             <ul>
                                 <li>+ 새 플레이리스트 만들기</li>
@@ -290,6 +290,8 @@ async function getId(){ // 검색 시 데이터 호출
 // 클릭 이벤트 ====================================================================================================//
 
 const clickAdd = function(key){ // 플레이리스트에 곡 추가하기 위해 버튼 클릭 (key : account의 playlist 목록)
+    console.log("[userPlaylist]",userPlaylist)
+    console.log("[store]",store.getters.getDataPlaylists)
     openAddPop.value = openAddPop.value == key? null : key; // 해당 key를 가진 element만 열림
 }
 const addToList = function(key,item){   // 해당 음악을 playlist 디렉토리에 추가 (key : platlist디렉토리 키, item : 음악 정보)

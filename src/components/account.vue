@@ -243,7 +243,7 @@ const saveMakeList = function(){
         updates2['account/' + useAuth.currentUser.uid + '/playlist/' + postkey2] = true
     const tagEntry = Object.keys(playlistContent.tag);
     tagEntry.forEach(v => {
-        updates2[`hashs/${v}/${postkey2}`] = true
+        updates2[`hashs/${v}/${postkey2}`] = postkey2
     })
     update(dataRef(useDatabase),updates2)
     makeListPage.value = false;
@@ -363,6 +363,7 @@ const deleteList = function(key,tags){
         display: flex;
         justify-content: center;
         align-items: center;
+        background-color: white;
     }
     .a_p_c_image img {
         width: 100%;
