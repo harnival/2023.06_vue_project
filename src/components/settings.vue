@@ -45,7 +45,20 @@
                             <li>
                                 <p>비밀번호</p>
                                 <div>
-                                    <a href="/" @click.prevent>비밀번호 수정하기</a>
+                                    <a href="/" @click.prevent="resetPwdChoice = 0">비밀번호 수정하기</a>
+                                    <div class="confirm_delete" v-if="resetPwdChoice === 0">
+                                        <p>비밀번호를 재설정하시겠습니까?</p>
+                                        <p>
+                                            <button type="button" class="sf_d_yes" @click.prevent="() => pwdReset(myData.email)">재설정</button>
+                                            <button type="button" class="sf_d_no" @click.prevent="resetPwdChoice = -1">취소</button>
+                                        </p>
+                                    </div>
+                                    <div class="confirm_delete" v-if="resetPwdChoice===1">
+                                        <p>해당 이메일로 재설정 메일을 발송했습니다. <br/> 확인해주시기 바랍니다.</p>
+                                        <p>
+                                            <button type="button" class="sf_d_no" @click.prevent="resetPwdChoice = -1">취소</button>
+                                        </p>
+                                    </div>
                                 </div>
                             </li>
                         </ul>
@@ -82,15 +95,15 @@
 import { useStore } from 'vuex';
     const store = useStore();
 import {ref, reactive, watch} from 'vue';
-import { useDatabase } from '../datasources/firebase';
+import { useDatabase, useAuth } from '../datasources/firebase';
 import { ref as dataRef , update } from 'firebase/database';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 // 내 데이터 불러오기 //
-let myData = reactive({});
-watch(() => store.getters.getAccount, (cur) => {
+let myData = reactive(store.getters.getLoginUserData);
+watch(() => store.getters.getLoginUserData, (cur) => {
     if (cur) {
-        myData = cur
-        console.log(cur, store.getters.getAccount)
+        myData = Object.assign(myData,cur)
     }
 },{immediate: true, deep: true})
 
@@ -112,7 +125,7 @@ const uploadImg = (e) => {
             img.style.width = '100%'
         }
         const updates = {};
-        updates[`account/${myData.uid}/photoURL`] = reader.result;
+        updates[`user/${myData.uid}/info/photoURL`] = reader.result;
         update(dataRef(useDatabase),updates);
     })
     if(file){
@@ -131,7 +144,7 @@ const blurName = function(e){
     nameReplace.value = !nameReplace.value;
     myData.name = e.target.value;
     const updates = {};
-    updates[`account/${myData.uid}/name`] = e.target.value;
+    updates[`user/${myData.uid}/info/name`] = e.target.value;
     update(dataRef(useDatabase),updates);
 
 }
@@ -146,7 +159,7 @@ const blurId = function(e){
     idReplace.value = !idReplace.value;
     myData.id = e.target.value
     const updates = {};
-    updates[`account/${myData.uid}/id`] = e.target.value;
+    updates[`user/${myData.uid}/info/id`] = e.target.value;
     update(dataRef(useDatabase),updates);
 }
     // 이메일 //
@@ -157,171 +170,18 @@ const clickEmailReplace = function(){
 }
 
 let deleteChoice = ref(false);
-
+let resetPwdChoice = ref(-1)
+const pwdReset = function(email){
+    if(useAuth.currentUser){
+        sendPasswordResetEmail(useAuth.currentUser, email)
+        .then(() => {
+            console.log("pwd email send");
+            resetPwdChoice.value = 1
+        }).error(err => console.log(err.code,"--->",err.message))
+    }
+}
 </script>
 
-<style scoped>
-    #settingBox {
-        padding-top: var(--main-top-padding) ;
-        min-height: 100vh;
-        box-sizing: border-box;
-    }
-    .settingBoxWrap {
-        width: 80%;
-        max-width: 1280px;
-        margin: auto;
-    }
-    .settingMenu {
-        text-align: start;
-        color: rgb(255,210,11);
-        font-family: 'NanumSquareNeoBold';
-        padding-left: 2rem;
-        font-size: 150%;
-    }
-    .settingFrame {
-        background-color: var(--main-color1);
-        border-radius: 1rem;
-        padding: 2rem 0;
-    }
-    /* ------------------------------ */
-    .sf_p_profile li,
-    .sf_p_account li{
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
-        align-items: center;
-    }
-    .sf_p_profile li > p,
-    .sf_delete > p,
-    .sf_p_account li > p{
-        width: 20%;
-        text-align: end;
-        font-size: 120%;
-        font-weight: 500;
-        color: #a60a27;
-        height: 100%;
-    }
-    .sf_p_p_image_wrap {
-        align-items: end;
-    }
-    .sf_p_p_image {
-        background-color: white;
-        width: 10vw;
-        aspect-ratio: 1/1;
-        border: 1px solid black;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 50%;
-        overflow: hidden;
-        position: relative;
-        cursor: pointer;
-    }
-    .sf_p_p_image img {
-        max-width: 100%;
-        max-height: 100%;
-    }
-    .sf_p_p_imageClick {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255,255,255,0.7) url('/img/img/plus.png') no-repeat center/ 50% 50%;
-        opacity: 0;
-    }
-    .sf_p_p_imageClick:hover {
-        opacity: 0.5;
-    }
-    /* ----------------------------- */
-    .sf_private input[type=text] {
-        border: 0;
-        background-color: #eee;
-        padding:0.5rem 1rem;
-        border-bottom: 2px solid #aaa;
-    }
-    .sf_replaceBtn {
-        display: block;
-        height: 1rem;
-        width: 1rem;
-        border: 0;
-        font-size: 0px;
-        background: transparent url('/img/img/pencil.svg') no-repeat center / 100% 100%;
-    }
-    .sf_p_p_name,
-    .sf_p_p_id {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-    .sf_p_p_name p,
-    .sf_p_p_id p{
-        padding: 0.5rem 1rem;
-    }
-    .sf_delete {
-        display: flex;
-        gap: 2rem;
-        margin-bottom: 2rem;
-        align-items: center;
-    }
-    .sf_delete a {
-        color: red;
-        background-color: white;
-        padding: 0.8rem 2rem;
-        font-weight: 600;
-        border-radius: 1rem;
-        transition: .3s ease;
-    }
-    .sf_delete a:hover {
-        color: white;
-        background-color: red;
-    }
-    .confirm_delete {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-50%);
-
-        width: 20vw;
-        height: 15vh;
-        background-color: #e0e0e0;
-        box-shadow: 3px 5px 5px 0px rgb(0,0,0,0.6);
-        border-radius: 1rem;
-    }
-    .confirm_delete p:first-of-type {
-        height: 70%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        line-height: 2;
-    }
-    .sf_d_yes {
-        color: red;
-        background-color: white;
-        border: 0;
-        padding: 0.6em 1em;
-        border-radius: 1em;
-        transition: .3s ease;
-    }
-    .sf_d_yes:hover{
-        background-color: red;
-        color: white;
-    }
-     .sf_d_no{
-        color: #333;
-        background-color: white;
-        border: 0;
-        padding: 0.6em 1em;
-        border-radius: 1em;
-        margin-left: 2rem;
-     }
-    /* ---------------------------------------------------- */
-    .sf_logout a {
-        color: #a60a27;
-        border: 2px solid #a60a27;
-        font-size: 120%;
-        font-weight: 600;
-        padding: 0.6em 1em;
-        border-radius: 1em;
-    }
+<style>
+    @import '../css/components/settings.css';
 </style>

@@ -5,44 +5,46 @@
       <strong>CHEEZS</strong>
     </div>
   </div>
+  
   <div id="appBox" v-else>
-    <header>
-      <div class="headerIcon" @click="goHome">
-        <img src="./assets/img/main-icon-fill2.png">
-        <h1>CHEEZS</h1>
-      </div>
-      <div class="accounts">
-        <div class="nav_account" v-if="store.getters.loginStateCheck">
-          <div class="nav_a_info_wrap">
-            <div class="nav_a_info beforeClick" @click="slideAccount">
+    <header class="app_header_wrap">
+        <div class="headerIcon" @click="routingPage('home')" v-if="headerState">
+          <img src="./assets/img/main-icon-fill2.png">
+          <h1>CHEEZS</h1>
+        </div>
+        <form class="app_searchBar" action="/search" @submit.prevent="searchEvent" v-if="headerState">
+          <input type="search" name="searchValue" placeholder="플레이리스트, 해시태그 검색">
+          <button>검색</button>
+        </form>
+        <div class="accounts" v-if="headerState">
+          <div class="nav_account" v-if="useAuth.currentUser">
+            <div class="nav_a_info beforeClick" @click="navMenuOpen = !navMenuOpen">
               <div class="nav_a_avatar">
-                <img :src="store.getters.getAccount.photoURL">
+                <img :src="store.getters.getLoginUserData.photoURL">
               </div>
-              <div class="nav_a_name">{{ store.getters.getAccount.name }}</div>
+              <div class="nav_a_name">{{ store.getters.getLoginUserData.name }}</div>
+            </div>
+            <div class="nav_a_menu" v-if="navMenuOpen">
+              <ul>
+                <li><a href="#" @click.prevent="routingPage('home')">홈</a></li>
+                <li><a href="#" @click.prevent="routingPage('music')">음악 검색</a></li>
+                <li><a href="#" @click.prevent="routingPage('account',useAuth.currentUser.uid)">내 정보</a></li>
+                <li><a href="#" @click.prevent="routingPage('setting')">설정</a></li>
+                <li><a href="#" @click.prevent="store.dispatch('logout')">로그아웃</a></li>
+              </ul>
             </div>
           </div>
-          <div class="nav_a_menu drawing">
-            <div class="nav_a_menuWrap">
-              <ul>
-                <li><a href="/" @click.prevent="goHome">홈</a></li>
-                <li><a href="/" @click.prevent="goPlaylist">탐색</a></li>
-                <li><a href="/" @click.prevent="goMusic">음악 검색</a></li>
-              </ul>
-              <ul>
-                <li><a href="/" @click.prevent="goAccount">내 정보</a></li>
-                <li><a href="/" @click.prevent="goSetting">설정</a></li>
-              </ul>
-            </div>
+          <div class="nav_account_notLogin" v-if="!useAuth.currentUser">
+            <button type="button" class="nav_a_nl_login" @click="oRouter.push({name : 'logIn'})">Login</button>
+            <button type="button" class="nav_a_nl_signIn" @click="oRouter.push({name : 'signUp'})">Sign Up</button>
           </div>
         </div>
-        <!-- <div class="logout_account" v-else>
-          <button type="button">로그인</button>
-          <button type="button">회원가입</button>
-        </div> -->
-      </div>
     </header>
     <main>
-      <div class="mainWrap">
+      <div class="nav_menu">
+        
+      </div>
+      <div class="mainWrap" v-if="dataCheck.every(v => v)">
         <router-view></router-view>
       </div>
     </main>
@@ -51,428 +53,142 @@
 
 <script setup>
 // import ------------------------------------------------------------------------------
-import {ref,reactive, onBeforeMount, watch, Transition, onMounted} from 'vue';
-import { onAuthStateChanged, updateProfile, getAuth } from 'firebase/auth';
+import axios from 'axios';
+import {ref,reactive,watch, onMounted} from 'vue';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useAuth, useDatabase } from './datasources/firebase';
 import {useStore} from 'vuex';
   const store = useStore();
 import { useRouter, useRoute } from 'vue-router';
   const oRouter = useRouter();
-import { get, ref as dataRef, onValue} from 'firebase/database';
+  const route = useRoute();
+import { get, ref as dataRef, onValue, query, limitToLast, orderByChild, set, serverTimestamp, equalTo, update} from 'firebase/database';
 
-// -------------------------------------------------------------------------------------
-onValue(dataRef(useDatabase,`account`), (snapshot) => {
-  const data = snapshot.val()
-  store.commit(`setDataUsers`,data);
-  console.log('[userData]', data)
-})
-onValue(dataRef(useDatabase,`playlists`), (snapshot) => {
-  const data = snapshot.val()
-  store.commit(`setDataPlaylists`,data);
-  console.log('[playlist data]', data)
-})
-onValue(dataRef(useDatabase,'hashs'), (snapshot) => {
-  const data = snapshot.val()
-  store.commit('setDataHashs',data);
-  console.log('[hashs data]', data)
-})
-onValue(dataRef(useDatabase,'musicSearch'), (snapshot) => {
-  const data = snapshot.val()
-  store.commit('setDataMusicSearch',data);
-  console.log('[musicSearch data]', data)
-})
-store.commit('setSetLoading',true)
-onAuthStateChanged(useAuth ,user => {
-    if(user) {
-      const uid = user.uid;
-      get(dataRef(useDatabase,`account/${uid}`))
-      .then(data => {
-        store.commit('loginAccount',data.val());
-        console.log('[Auth State] log In',data.val())
-        oRouter.push({name : 'main'});
-        store.commit('setSetLoading',false)
+const dataCheck = reactive([])
+const hashObj = reactive({})
+const navMenuOpen = ref(false);
+let headerState = ref(false)
+// 1. data load
+
+
+
+onMounted(async function(){
+  store.commit('setSetLoading',true);
+  onAuthStateChanged(useAuth,user => {
+    if(user){
+      onValue(dataRef(useDatabase,`user/${user.uid}/info`),snapshot => {
+        const v = snapshot.val();
+        if(!v.photoURL){
+          v.photoURL = '/img/img/rodent.png'
+        }
+        store.commit('setLoginUserData',v);
       })
-    } else {
-      store.commit('loginAccount',null);
-      oRouter.push('/logIn');
-      console.log('[Auth State] Log Out')
-      store.commit('setSetLoading',false)
+      onValue(dataRef(useDatabase,`user/${user.uid}/following`),snapshot => {
+        const v = snapshot.val();
+        store.commit('setLoginUserFollowing',Object.keys(v));
+      })
+      onValue(dataRef(useDatabase,`user/${user.uid}/follower`),snapshot => {
+        const v = snapshot.val();
+        store.commit('setLoginUserFollower',Object.keys(v));
+      })
+      onValue(query(dataRef(useDatabase,`playlists`),orderByChild(`uid`),equalTo(user.uid)),snapshot => {
+        store.commit('setUserPlaylists',snapshot.val())
+        console.log("User Playlists : ", snapshot.val())
+      })
+    }else{
+      store.commit('setLoginUserData',null);
+      store.commit('setUserPlaylists',null);
+      store.commit('setRandomFollowing',null);
+      oRouter.push({name : 'home'})
+      console.log("Non Login User");
     }
-   
-})
+  
+  })
+  const query1 = query(dataRef(useDatabase,`hash`),orderByChild('number'),limitToLast(3))
+  const get1 = await get(query1);
+  const get2 = Object.entries(get1.val()).map(v => ({ [v[0]] : Object.keys(v[1].list) }))
+  store.commit('setPopularHash',get2);
+  console.log("hash ::: ",get2)
 
-// account 메뉴 슬라이드 클릭 이벤트 //
-const slideAccount = function(){
-  const menu = document.querySelector(".nav_a_menu");
-  menu.classList.toggle('drawing')
-  if(menu.classList.contains('drawing')){
-    menu.style.transform = `translateX(0px)`
+  const get4 = await get(dataRef(useDatabase,'musicSearch'))
+  const get5 = new Date(get4.val().lastSearchTime);
+  if(get5 && Date.now() - get5 < 86400000*5){
+    store.commit('setPopularMusic',get4.val().popular);
+    console.log("인기급상승 불러옴 : ", get4.val().popular)
   } else {
-    menu.style.transform = `translateX(100%)`
+    const APIkeys = await get(dataRef(useDatabase,'API_key'));
+    const res = await axios.get("https://www.googleapis.com/youtube/v3/videos",{
+        params: {
+            part: 'snippet, contentDetails',
+            type: 'video',
+            key: APIkeys.val(),
+            chart: 'mostPopular',
+            regionCode : 'kr',
+            videoCategoryId: '10',
+            videoSyndicated: 'true',
+            maxResults: 16
+        }
+    });
+    const res2 = res.data.items.filter(v => v.snippet.description.includes('Provided to YouTube'||'Auto-generated by YouTube'));
+    const res3 = await res2.map(item => {
+      const channel = item.snippet.channelTitle;
+      const channel2 = channel.includes(' - Topic')? channel.split(' - Topic')[0] 
+        : channel.includes(' - 주제')? channel.split(' - 주제')[0] : channel.split(' - ')[0];  ;
+      return ({
+              id: item.id,
+              title: item.snippet.title.replaceAll('&#39;',`'`).replaceAll('&amp;','&'),
+              artist: channel2,
+              thumbnail: `https://i.ytimg.com/vi/${item.id}/maxresdefault.jpg`,
+              url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+              duration: item.contentDetails.duration.match(/[0-9]+/g)
+          })
+    });
+    update(dataRef(useDatabase),{
+      [`musicSearch/lastSearchTime`] : Date.now(),
+      [`musicSearch/popular`] : res3
+    })
+    store.commit('setPopularMusic',res3)
+    console.log("인기급상승 새로 등록 : ", res3)
   }
+
+  return store.commit('setSetLoading', null);
+})
+function searchEvent(event){
+  const d1 = Object.fromEntries(new FormData(event.target).entries())
+  const values = d1.searchValue;
+  routingPage('search',values)
 }
 
-// account menu 이동 //
-const goAccount = function(){
-  oRouter.push({ name: 'account', params : { ids : useAuth.currentUser.uid}})
-  slideAccount()
+function routingPage(name,prop){
+  switch (name) {
+    case "account" :
+      oRouter.push({ name: 'account', params : { ids : prop}})
+      break;
+    case "search" :
+      oRouter.push({ name : 'search', params : {words : prop}})
+      break;
+    default:
+      oRouter.push({ name: name})
+      break;
+  }
+  store.commit('routing',name);
+  slideAccount();
 }
-const goHome = function(){
-  oRouter.push({name: 'main'})
-  store.commit('routing', 'Home');
-  slideAccount()
+function slideAccount(){
+  navMenuOpen.value = null;
 }
-const goMusic = function(){
-  oRouter.push({name: 'main'})
-  store.commit('routing', 'Music');
-  slideAccount()
 
-}
-const goHash = function(){
-  oRouter.push({name: 'main'})
-  store.commit('routing', 'Hash');
-  slideAccount()
-
-}
-const goPlaylist = function(){
-  oRouter.push({name: 'main'});
-  store.commit('routing', 'Playlist');
-  slideAccount()
-
-};
-const goSetting = function(){
-  oRouter.push({name: 'setting'});
-  slideAccount()
-
-}
-// 리스트 생성, 수정 창 //
-
+watch(() => route.path, cur => {
+  if(cur == '/logIn' || cur == '/signUp'){
+    headerState.value = false
+  }else{
+    headerState.value = true
+  }
+},{immediate : true})
 // 알림 설정 -------------------------------------------------------
 </script>
-
 <style>
-:root {
-  --inputwrap-label-bg: #f0f0fd;
-  --main-color1:rgb(255, 210, 11);
-  --header-height: 7vh;
-  --main-top-padding: 10rem;
-}
-body {
-  margin: 0;
-  padding: 0;
-  user-select: none;
-}
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 0px;
-  z-index: 8000;
-}
-ul,li {
-  list-style: none;
-  margin: 0px;
-  padding: 0px;
-}
-button {
-  cursor: pointer;
-}
-p {
-  padding: 0;
-  margin: 0;
-}
-a {
-  text-decoration: none;
-  color: black;
-}
-h1,h2,h3,h4,h5,h6 {
-  margin: 0; padding: 0;
-}
-#app {
-  width: 100%;
-  text-align: center;
-  background-color: transparent;
-  background-color: #ffffff;
-}
-#appBox {
-  box-sizing: border-box;
-}
-.inputwrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.inputwrap input{
-  font-size: 18px;
-  border: 0;
-  background-color: transparent;
-  width: 100%;
-  height: 3em;
-  border: 1px solid #ccc;
-  border-radius: 1em;
-  padding: 0 1em;
-  z-index: 5;
-}
-.inputwrap input:focus {
-  outline: 2px solid royalblue;
-}
-.inputwrap label {
-  position: absolute;
-  left: 1em;
-  background-color: var(--inputwrap-label-bg);
-  padding: 0 0.5em;
-  transition: .2s ease-in-out;
-  z-index: 3;
-  color: #666;
-}
-label.label_focused {
-  color: royalblue;
-}
-label.label_value {
-  z-index: 10;
-  font-size: 12px;
-  transform: translateX(-100%);
-}
-
-.pl_title_btn {
-  width: 1rem;
-  position: relative;
-}
-.pl_title_btn button {
-  filter: invert(100%);
-  width: 100%;
-  height: 100%;
-  display: block;
-  border: 0;
-  font-size: 0px;
-  background: transparent url('./assets/img/dots-vertical.svg') no-repeat center/ 150%;
-}
-.sec1_title_menu {
-        position: absolute;
-        /* top: 50%; */
-        top: 0;
-        /* transform: translateY(-50%); */
-        right: 110%;
-
-        font-size: 90%;
-        font-weight: 500;
-        word-break: keep-all;
-        display: flex;
-        flex-direction: column;
-        /* background-color: rgba(0,0,0,0.3); */
-        background-color: rgb(255,255,255,0.9);
-        backdrop-filter: blur(10px);
-        overflow: hidden;
-        border-radius: 0.5rem;
-
-        box-shadow: 2px 1px 3px 0px rgba(0, 0, 0, 0.63);
-    }
-    .sec1_title_menu a {
-        text-decoration: none;
-        color: black;
-        padding: 0.7em 2.5em;
-    }
-    .sec1_title_menu a:hover{
-        /* background-color: rgba(255,255,255,0.3); */
-        background-color: rgb(0,0,0,0.3);
-    }
-</style>
-
-
-<style scoped>
-/* ======================================= */
-.headerIcon {
-  width: fit-content;
-  height: var(--header-height);
-
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  padding: 0 1rem;
-  box-sizing: border-box;
-  position: absolute;
-  top: 0;
-  left: 0;
-
-  cursor: pointer;
-}
-.headerIcon img {
-  height: 60%;
-  aspect-ratio: 1/1;
-}
-.headerIcon h1 {
-  font-size: 250%;
-  font-family: 'Oswald';
-  color: var(--main-color1);
-}
-/* ---------------------------------------header Icon */
-/* loading------------------------------------------ */
-.loadingPage {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 300%;
-  font-family: 'Oswald';
-  background-color: rgb(255,210,11);
-}
-.loadingPage > div {
-  padding: 10%;
-  aspect-ratio: 1/1;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-.loadingPage img {
-  width: min(20vw, 100px);
-}
-/* -------------------------------------------------loading */
-main {
-  background:
-    linear-gradient(45deg,rgba(0,0,0, 0.7),rgba(0, 0, 0, 0.7)),
-    linear-gradient(240deg, transparent,red),
-    linear-gradient(45deg, transparent,yellow);
-    min-height: 100vh;
-    overflow: hidden;
-}
-.mainWrap {
-  width: 100vw;
-  /* height: 93vh; */
-  margin-top: 7vh;
-}
-/* account menu--------------------------------------------- */
-.accounts {
-  position: absolute;
-  right: 0;
-  top: 0;
-  height: 100vh;
-  transition: .3s ease;
-}
-  /* account > user  */
-.nav_account {
-  height: 100%;
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-.nav_a_info_wrap {
-height: var(--header-height);
-position: absolute;
-top: 0;
-right:0;
-padding: 0.5vh 2rem;
-box-sizing: border-box;
-
-}
-.nav_a_info {
-  height: 100%;
-  gap: 1rem;
-  border-radius: 3vh;
-  cursor: pointer;
-  transition: .3s ease;
-  display: flex;
-  background: linear-gradient(300deg, rgb(250,210,11), rgba(250, 182, 36, 0.719),rgb(178, 228, 0));
-
-  position: relative;
-}
-.nav_a_info:hover {
-  background-color: rgb(255,210,11,0.5);
-}
-.nav_a_avatar {
-  height: 6vh;
-  width: 6vh;
-  aspect-ratio: 1/1;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: sticky;
-  left: 5vw;
-  top: 0;
-  z-index: 5;
-}
-.nav_a_avatar img {
-  width: 100%;
-}
-.nav_a_name{
-  position: relative;
-  font-size: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  word-break: keep-all;
-  white-space: nowrap;
-  min-width: 5vw;
-  z-index: 1;
-}
-.nav_a_name::after {
-  content: '';
-  background: url('/img/img/chevron-down.svg') no-repeat center/1.2rem 1.2rem;
-  display: block;
-  width: 1rem;
-  height: 100%;
-  position: absolute;
-  right: 1em;
-  top: 0;
-  padding-left: 1rem;
-}
-  /* account > menu */
-.nav_a_menu {
-  height: 93%;
-  transition: .4s ease;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding-right: 2rem;
-
-}
-.nav_a_menuWrap {
-  width: max(5vw, 5rem);
-  word-break:keep-all;
-  white-space: nowrap;
-}
-.nav_a_menuWrap li {
-  margin-top: 1rem;
-}
-.nav_a_menuWrap li a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-decoration: none;
-  color: black;
-  font-size: 100%;
-  width: 100%;
-  aspect-ratio: 1;
-  background-color: rgb(255,210,11);
-  border-radius: 50%;
-}
-.nav_a_menuWrap li a:hover {
-  background-color: #efefef;
-}
-hr {
-  margin: 0;
-  height: 0.5px;
-  border: 0;
-  background-color: #666;
-}
-.nav_a_menu_plTitle{
-  padding: 1rem 0;
-  font-weight: 500;
-}
-.nav_a_menu_plTitle li{
-  padding-bottom: 0.5rem;
-  font-weight: 400;
-}
-
+  @import './css/reset.css';
+  @import './css/font.css';
+  @import './css/app.css';
 </style>

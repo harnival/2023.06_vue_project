@@ -1,0 +1,219 @@
+#signUpBox {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#signUpBox > form {
+    width: min(50vw, 767px);
+    height: calc(100% - var(--header-height));
+    display: flex;
+    justify-content: center;
+    background-color: #f0f0fd;
+    padding: 2rem 0;
+    font-family: 'NanumBarunGothic';
+    box-shadow: 2px 3px 4px 2px rgba(0, 0, 0, 0.4);
+    border-radius: 2rem;
+}
+#signUpBox > form {
+    position: relative;
+}
+.signupBox_title {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    font-size: 250%;
+    color: #f0f0fd;
+    line-height: 70%;
+}
+.signpage {
+    margin: auto;
+    width: min(80vw, 500px);
+    position: relative;
+}
+.signpage_2_wrap {
+    display: block;
+}
+.avatar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#avatar_img_input {
+    display: none;
+}
+.avatar_text{
+    color: #333;
+    text-align: start;
+    letter-spacing: 1px;
+    padding: 10px 0;
+    font-size: 80%;
+}
+.avatarModal {
+    display: none;
+}
+.avatarWrap {
+    border: 2px solid rgb(0,0,0,0.3);
+    border-radius: 2rem;
+    width: 50%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    cursor: pointer;
+    
+}
+.avatarWrap_img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.clickMe {
+    height: 100%;
+    padding: 50% 0;
+    box-sizing: border-box;
+    color: #999;
+}
+.toDefaultImg {
+    text-decoration: underline;
+    cursor: pointer;
+}
+.btns {
+    padding-top: 2rem;
+}
+.btns button {
+    border: 0;
+    background-color: #ddd;
+    padding: 0.5em 1em;
+    font-size: 100%;
+    border-radius: 1em;
+    cursor: pointer;
+}
+
+#signup_email.required,
+#signup_email.requiredEmail,
+#signup_email.existEmail,
+#signup_pwd.required,
+#signup_pwd.requiredLength,
+#signup_pwdconfirm.required
+{
+    border: 2px solid rgb(255, 44, 44);
+    position: relative;
+}
+.signEmail.required::after {
+    content: '이메일을 입력해주세요.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+    width: 100%;
+}
+.signEmail.existEmail::after {
+    content: '이미 가입된 이메일입니다.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+    width: 100%;
+}
+.signEmail.requiredEmail::after {
+    width: 100%;
+    content: '이메일을 정확히 입력해주세요.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+}
+.signPwd.required::after {
+    width: 100%;
+
+    content: '비밀번호를 입력해주세요.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+}
+.signPwdconfirm.required::after {
+    width: 100%;
+
+    content: '비밀번호 확인란을 입력해주세요.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+}
+.signPwd.requiredLength::after {
+    width: 100%;
+
+    content: '비밀번호는 6자리 이상 입력해주세요.';
+    position: absolute;
+    top: 110%;
+    left: 0;
+    display: block;
+    text-align: center;
+    color: red;
+    font-size: 100%;
+}
+.signpage_1 > div{
+    margin-bottom: 2rem;
+}
+.disabledYes {
+    background-color: #aaa;
+    border: 2px solid #aaa;
+}
+.abledYes {
+    background-color: var(--main-color1);
+    border: 2px solid var(--main-color1);
+}
+.yesbtn {
+    color: white;
+    font-size: 100%;
+    font-weight: 600;
+    border-radius: 2rem;
+    padding: 0.6em 1em;
+    transition: .3s ease;
+}
+.abledYes:hover {
+    opacity: 0.7;
+}
+.pwdInfo {
+    padding-top: 1rem;
+    color: royalblue;
+}
+.signUp_headerIcon {
+    height: 2rem;
+    cursor: pointer;
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.signUp_headerIcon h1 {
+    font-size: 150%;
+    font-family: 'Oswald';
+    /* color: var(--main-color1); */
+}
+.signUp_headerIcon img{
+    width: 100%;
+    height: 100%;
+    display: block;
+    margin: auto;
+}

@@ -11,15 +11,19 @@ const store = createStore({
       nowSearchMusic: null,
       innerNotification : [],
       // 로딩 지연 //
-      setLoading: false,
+      setLoading: true,
       // 로그인 에러 발생 시 메세지 호출 //
       loginError : null,
       // database data //
-      dataUsers : {},
-      dataPlaylists : {},
-      dataHashs : {},
+      
       dataMusicSearch : {},
-      textin : null
+      textin : null,
+      // ---------------------------------//
+      loginUserData : {},
+      userPlaylists : null,
+      popularHash : [],
+      randomFollowing : null,
+      popularMusic : null
     }
   },
   mutations: {
@@ -30,28 +34,25 @@ const store = createStore({
       state.loginState = payload;
     },
     storeSearching(state,payload){
-      state.nowSearchMusic = payload
+      state.nowSearchMusic = payload ? payload : []
     },
     // 로딩 지연 //
     setSetLoading(state,payload){
-      console.log('[loading]',payload)
-      state.setLoading = payload
+      state.setLoading = payload;
+      console.log("Set Loading State : ",payload)
     },
     // database load //
     setDataUsers(state,payload){
-      state.dataUsers = payload
+      state.dataUsers = payload ? payload : [];
     },
     setDataPlaylists(state,payload){
-      state.dataPlaylists = payload
+      state.dataPlaylists = payload ? payload : [];
     },
     setDataHashs(state,payload){
-      state.dataHashs = payload
+      state.dataHashs = payload ? payload : [];
     },
     setLoginError(state,payload){
       state.loginError = payload
-    },
-    setDataMusicSearch(state,payload){
-      state.dataMusicSearch = payload
     },
     setInnerNotification(state,payload){
       state.innerNotification.push(payload)
@@ -69,6 +70,47 @@ const store = createStore({
         const t = payload.getCurrentTime();
         console.log(t)
       },500)
+    },
+    // --------------------------------------------------//
+    setLoginUserData(state,payload){
+      if(payload){
+        state.loginUserData = payload;
+        console.log("Commit User Data : ",payload.uid)
+      }
+    },
+    setLoginUserFollower(state,payload){
+      state.loginUserData['follower'] = payload
+    },
+    setLoginUserFollowing(state,payload){
+      state.loginUserData['following'] = payload;
+    },
+    setUserPlaylists(state,payload){
+      if(payload){
+        state.userPlaylists = payload;
+        console.log("Commit User's Playlists")
+      }
+    },
+    setPopularHash(state,payload){
+      if(payload){
+        state.popularHash = payload;
+        console.log("Commit Popular Hash : ",payload);
+      }
+    },
+    setRandomFollowing(state,payload){
+      state.randomFollowing = payload;
+      if(payload){
+        console.log("Commit Following Selected : ",payload.uid)
+      }
+    },
+    playlistPush(state,payload){
+      const [key,val] = payload;
+      state.userPlaylists[key] = val
+    },
+    setPopularMusic(state,payload){
+      state.popularMusic = payload;
+    },
+    setDataMusicSearch(state,payload){
+      state.dataMusicSearch[payload.word] = payload.data
     }
   },
   getters: {
@@ -97,16 +139,31 @@ const store = createStore({
     getDataHashs(state){
       return state.dataHashs
     },
-    getDataMusicSearch(state){
-      return state.dataMusicSearch
-    },
     getLoginError(state){
       return state.loginError
     },
     getInnerNotification(state){
       return state.innerNotification
     },
-    
+    // ---------------------------------------------//
+    getLoginUserData(state){
+      return state.loginUserData
+    },
+    getUserPlaylists(state){
+      return state.userPlaylists
+    },
+    getPopularHash(state){
+      return state.popularHash
+    },
+    getRandomFollowing(state){
+      return state.randomFollowing
+    },
+    getPopularMusic(state){
+      return state.popularMusic;
+    },
+    getDataMusicSearch(state){
+      return state.dataMusicSearch
+    }
   },
   actions: {
     loginWithEmail({commit, state},payload){
@@ -124,7 +181,6 @@ const store = createStore({
       });
       
     },
-
     logout({commit}){
       signOut(useAuth)
       .then(()=> {
@@ -133,7 +189,6 @@ const store = createStore({
       })
       .catch(err => console.log(err.message));
     },
-
     dataLoad({commit,state}){
       return  new Promise((res,rej) => {
         commit('setSetLoading',true);
@@ -187,6 +242,7 @@ const store = createStore({
         router.push('/logIn');
       })
     }
+    
   }
 })
 

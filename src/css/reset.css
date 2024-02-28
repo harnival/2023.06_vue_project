@@ -1,0 +1,30 @@
+:root {
+  --inputwrap-label-bg: #f0f0fd;
+  --main-color1:rgb(255, 210, 11);
+  --header-height: max(7vh, 4rem);
+  --main-top-padding: 10rem;
+}
+body {
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+ol,ul,li {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+button {
+  cursor: pointer;
+}
+p {
+  padding: 0;
+  margin: 0;
+}
+a {
+  text-decoration: none;
+  color: black;
+}
+h1,h2,h3,h4,h5,h6 {
+  margin: 0; padding: 0;
+}

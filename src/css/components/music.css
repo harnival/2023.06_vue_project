@@ -1,0 +1,758 @@
+#musicBox {
+    /* padding-top: var(--main-top-padding); */
+    box-sizing: border-box;
+}
+.musicBoxWrap {
+    background-color: rgba(0, 0, 0, 0.61);
+    width: 100%;
+    margin: auto;
+    min-height: 100vh;
+    /* padding: 5vh 2rem; */
+    box-sizing: border-box;
+}
+.popularMusicListWrap {
+    padding: 0;
+    width: 70%;
+    margin: auto;
+}
+.popularMusicList{
+    position: relative;
+    width: 100%;
+}
+.popularTextLi {
+    text-align: start;
+    color:white;
+    font-family: 'NanumSquareNeoBold';
+    font-size: 150%;
+    padding-bottom: 1rem;
+}
+.musicList_wrap {
+    width: 70%;
+    margin: auto;
+    /* background-color: black; */
+}
+.musicList {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    /* height: 7rem; */
+    /* background-color: rgba(255, 255, 255, 0.788); */
+    padding: 1rem 5%;
+    box-sizing: border-box;
+    margin: auto;
+    border-bottom: 1px solid #666;
+    color: white;
+}
+.ml_result{
+    text-align: left;
+    padding-bottom: 1rem;
+    font-size: 120%;
+    color: white;
+}
+.ml_result span{
+    padding-right: 2rem;
+}
+.ml_img_wrap {
+    height: 5rem;
+}
+.ml_img {
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 1rem;
+    height: 100%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+    position: relative;
+    transition: .5s ease;
+    background-color: white;
+}
+.ml_img:hover {
+    box-shadow: 1px 1px 3px 0px #666;
+}
+.ml_i_cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.5);
+    opacity: 0.4;
+    transition: .5s ease;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.ml_i_cover:hover {
+    background-color: rgba(255,255,255,0.5);
+    opacity: 0.7;
+}
+.ml_i_cover img {
+    width: 50%;
+    object-position: center;
+}
+.ml_i_album {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.ml_i_cover img.removed {
+    display: none;
+}
+.stopRoll {
+    animation-play-state: paused;
+}
+@keyframes rolling{
+    from{ transform: rotateZ(0deg); }
+    to{ transform: rotateZ(360deg); }
+}
+.ml_player{
+    width: 50rem;
+    overflow: hidden;
+    transition: .5s ease;
+}
+.ml_player.qqqqq {
+    width: 0vw;
+}
+.ml_player_wrap {
+    width: 50rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: 0.5s ease;
+}
+.ml_text_wrap{
+    width: 100%;
+    padding-right: 5%;
+    padding: 0 5% 0 5%;
+}
+.ml_text {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    font-family: 'NanumSquareNeo';
+}
+.ml_title {
+    padding: 0px;
+    margin: 0px;
+    font-size: 120%;
+}
+.ml_artist {
+    padding: 0px;
+    margin: 0px;
+}
+.ml_player{
+    width: 100%;
+}
+.ml_player_wrap{
+    word-break: keep-all;
+    white-space: nowrap;
+
+    min-width: 1px;
+    width: 0%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    overflow: hidden;
+    transition: width 0.5s ease-in-out;
+    padding: 0.5rem 0;
+}
+.ml_player_wrap.ml_player_wrap_atv{
+    animation: spreadWidth .5s ease forwards alternate;
+}
+@keyframes spreadWidth{
+    0% {width: 0%;}
+    100% {width: 100%;}
+}
+.ml_p_bar {
+    height: 0.5rem;
+    background-color: #979797ad;
+    width: 0;
+    transition: width .8s ease-in-out;
+    border-radius: 0.25rem;
+}
+.ml_p_bar.ml_p_barActive {
+    width: 100%
+}
+.bar_line {
+    background-color: #A60A27;
+    height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    /* transition: .5s ease; */
+    border-radius: 0.25rem;
+    min-width: 0.5rem;
+}
+.bar_line_ball {
+    height: 0.8rem;
+    aspect-ratio: 1/1;
+    background-color: #A60A27;
+    border-radius: 50%;
+    transform-origin: center center;
+}
+.bar_line_ball:hover {
+    transform: scale(1.2,1.2);
+    cursor: pointer;
+}
+.ml_p_current {
+    transition: .5s ease-in-out;
+    word-break: keep-all;
+}
+.ml_menu {
+    position: relative;
+}
+.ml_m_add {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 0;
+    font-size: 0px;
+    background:transparent url('../../assets/img/dots-vertical.svg') center/70% no-repeat;
+    margin-bottom: 3px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    filter: invert(100%);
+}
+
+.ml_m_search {
+    background: url('../../assets/img/search.svg') center/80% no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ml_m_list {
+    position: absolute;
+    top: 0;
+    right: calc(100% + 5px);
+    padding: 1rem 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(3px);
+    border-radius: 5px;
+    width: fit-content;
+    white-space: nowrap;
+    word-break: keep-all;
+    box-shadow: 2px 2px 3px 0px black;
+}
+
+.ml_m_mylist {
+    position: absolute;
+    top: -10%;
+    right: 100%;
+    padding: 1rem 0;
+    border-radius: 5px;
+    box-shadow: 1px 2px 3px 0px rgba(0, 0, 0, 0.6);
+    width: max-content;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+}
+.ml_m_list a {
+    display: inline-block;
+    padding: 0 1rem;
+    height: 2em;
+    line-height: 2em;
+    width: 100%;
+    box-sizing: border-box;
+    /* background: url('../../assets/img/plus.png') no-repeat center left 1rem/ contain; */
+}
+.ml_m_m_new a{
+    color: rgb(0,0,0,0.6) !important; 
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+.ml_m_list a:hover {
+    background-color: white;
+}
+/* -------------------------------------------------------------------- */
+.searchBox {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    /* border-radius: 2rem; */
+    background-color: white;
+    margin: 9% auto;
+    padding: 1rem 0;
+    height: fit-content;
+}
+.sb_title{
+    position: absolute;
+    bottom: 100%;
+    left: 15%;
+    font-size: 200%;
+    color: white;
+    width: 70%;
+    font-family: 'NanumSquareNeoBold';
+}
+.sb_title h3 {
+    text-align: left;
+    line-height: 90%;
+}
+.sb_inputWrap {
+    width: 70%;
+    margin: auto;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
+.searchBox input {
+    width: 100%;
+    font-size: 100%;
+    padding: 1rem 10%;
+    box-sizing: border-box;
+    border: 0;
+    border-bottom: 2px solid #aaa;
+    outline: none;
+    z-index: 8000;
+}
+.inputBox_sb {
+    z-index: 8000;
+}
+.focusLine {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 2px;
+    background-color: #A60A27;
+    transition: .5s ease;
+}
+.sb_btn {
+    font-size: 0px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    border-width: 2px;
+    border-style: solid;
+    border-color: #aaaaaa;
+    background: transparent url('../../assets/img/search.svg') center/2rem no-repeat;
+    height: 100%;
+    aspect-ratio: 2/1;
+    cursor: pointer;
+    transition: .5s ease;
+}
+.sb_btn:hover {
+    background-color: #a60a278a;
+    border-color: #a60a278a;
+}
+/* ===================///////////////////////////============================================== */
+
+@media screen and (max-width:1023px){
+    #musicBox {
+    padding-top: 0;
+    min-height: 100vh;
+    }
+    .musicBoxWrap {
+        background-color: rgba(0, 0, 0, 0.61);
+        width: 100%;
+        margin: auto;
+        min-height: 100vh;
+        /* padding: 5vh 2rem; */
+        box-sizing: border-box;
+    }
+    .popularMusicList {
+        padding: 0;
+        position: relative;
+        width: 90%;
+        margin: auto;
+    }
+    .popularTextLi {
+        text-align: start;
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        color:white;
+        font-family: 'NanumSquareNeoBold';
+        font-size: 150%;
+    }
+    .musicList_wrap {
+        width: 90%;
+        margin: auto;
+        /* background-color: black; */
+    }
+    .musicList {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        height: max(18vh, 8rem);
+        background-color: white;
+        padding: 2rem 5%;
+        box-sizing: border-box;
+        margin: auto;
+        border-bottom: 1px solid #666;
+        border-radius: 2rem;
+    }
+    .ml_img_wrap {
+        height: 100%;
+    }
+    .ml_img {
+        border: 1px solid black;
+        border-radius: 50%;
+        height: 100%;
+        aspect-ratio: 1/1;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        transition: .5s ease;
+        background-color: white;
+    }
+    .ml_img:hover {
+        box-shadow: 1px 2px 5px 0px #666;
+    }
+    .ml_i_cover {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.5);
+        opacity: 0.4;
+        transition: .5s ease;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .ml_i_cover:hover {
+        background-color: rgba(255,255,255,0.5);
+        opacity: 1;
+    }
+    .ml_i_cover img {
+        width: 80%;
+    }
+    .ml_i_album {
+        display: block;
+        height: 150%;
+    }
+    .ml_i_cover img.removed {
+        display: none;
+    }
+    .stopRoll {
+        animation-play-state: paused;
+    }
+    @keyframes rolling{
+        from{ transform: rotateZ(0deg); }
+        to{ transform: rotateZ(360deg); }
+    }
+    .ml_player {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .ml_text_wrap{
+        width: 100%;
+        padding-right: 5%;
+    }
+    .ml_text {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+    .ml_title {
+        padding: 0px;
+        margin: 0px;
+        font-size: 150%;
+    }
+    .ml_artist {
+        padding: 0px;
+        margin: 0px;
+    }
+    .ml_p_bar {
+        height: 0.5rem;
+        overflow: hidden;
+        background-color: #eee;
+        width: 0;
+        transition: .8s ease-in-out;
+    }
+    .ml_p_bar.ml_p_active {
+        width: 70%
+    }
+    .bar_line {
+        background-color: #A60A27;
+        height: 100%;
+    }
+    .ml_p_current {
+        width: 0em;
+        overflow: hidden;
+        display: flex;
+        justify-content: start;
+        transition: .5s ease-in-out;
+        word-break: keep-all;
+    }
+    .ml_p_current.ml_p_active {
+        width: 3em;
+    }
+    .ml_player p{
+        padding: 0px;
+        margin: 0px;
+    }
+    .ml_menu {
+        position: relative;
+    }
+    .ml_menu button{
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background-color: #ddd;  
+        border: 0;
+        font-size: 0px;
+    }
+    .ml_m_add {
+        background: url('../../assets/img/plus.png') center/80% no-repeat;
+        margin-bottom: 3px;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .ml_m_add.listup:hover:before {
+        content: '내 플레이리스트에 추가';
+        display: flex;
+        align-items: center;
+        padding: 0.5em;
+        font-size: 0.8rem;
+        position: absolute;
+        right: 120%;
+        width: fit-content;
+        height: 100%;
+        word-break: keep-all;
+        white-space: nowrap;
+        background-color: rgba(0,0,0,0.4);
+        border-radius: 1em;
+        color: white;
+    }
+    .ml_m_search {
+        background: url('../../assets/img/search.svg') center/80% no-repeat;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .ml_m_search:hover:before {
+        content: '해당 곡이 들어간 플레이리스트 검색';
+        display: flex;
+        align-items: center;
+        padding: 0.5em;
+        font-size: 0.8rem;
+        position: absolute;
+        right: 120%;
+        width: 10em;
+        height: 100%;
+        word-break: keep-all;
+        background-color: rgba(0,0,0,0.4);
+        border-radius: 1em;
+        color: white;
+    }
+    .ml_m_mylist {
+        position: absolute;
+        top: 0;
+        right: 120%;
+        width: 20rem;
+        background-color: rgba(0,0,0,0.2);
+        box-shadow: 1px 2px 5px 0px #666;
+        backdrop-filter: blur(10px);
+    }
+    .ml_m_mylist li a {
+        display: block;
+        text-decoration: none;
+        color: black;
+        background: url('../../assets/img/plus.png') no-repeat center left 1rem/ contain;
+    }
+    .ml_m_mylist li a:hover {
+        background-color: rgba(255,255,255,0.5);
+    }
+    /* -------------------------------------------------------------------- */
+    .searchBox {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        box-sizing: border-box;
+        /* border-radius: 2rem; */
+        background-color: white;
+        margin: 10% auto;
+        padding: 1rem 0;
+        height: fit-content;
+    }
+    .sb_title{
+        position: absolute;
+        bottom: 100%;
+        left: 5%;
+        font-size: 250%;
+        color: white;
+        width: 90%;
+        font-family: 'NanumSquareNeoBold';
+    }
+    .sb_title h3 {
+        text-align: left;
+        line-height: 1;
+    }
+    .sb_inputWrap {
+        width: 70%;
+        margin: auto;
+        position: relative;
+    }
+    .searchBox input {
+        width: 100%;
+        font-size: 100%;
+        padding: 1rem 10%;
+        box-sizing: border-box;
+        border: 0;
+        border-bottom: 2px solid #aaa;
+        outline: none;
+        z-index: 8000;
+    }
+    .inputBox_sb {
+        z-index: 8000;
+    }
+    .focusLine {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 0;
+        height: 2px;
+        background-color: #A60A27;
+        transition: .5s ease;
+    }
+    .sb_btn {
+        font-size: 0px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        border-width: 2px;
+        border-style: solid;
+        border-color: #aaaaaa;
+        background: transparent url('../../assets/img/search.svg') center/2rem no-repeat;
+        height: 100%;
+        aspect-ratio: 2/1;
+        cursor: pointer;
+        transition: .5s ease;
+    }
+    .sb_btn:hover {
+        background-color: #a60a278a;
+        border-color: #a60a278a;
+    }
+}
+/* ======================///////////////////////////////======================= */
+
+@media screen and (max-width: 767px){
+    .popularMusicList {
+        padding: 0;
+        position: relative;
+        width: 100%;
+        margin: auto;
+    }
+    .popularTextLi {
+        text-align: start;
+        position: absolute;
+        bottom: 100%;
+        left: 5%;
+        color:white;
+        font-family: 'NanumSquareNeoBold';
+        font-size: 150%;
+    }
+    .musicList_wrap {
+        width: 100%;
+        margin: auto;
+        /* background-color: black; */
+    }
+    .musicList {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        height: auto;
+        background-color: white;
+        padding: 1rem 5%;
+        box-sizing: border-box;
+        margin: auto;
+        border-bottom: 1px solid #666;
+        border-radius: 0;
+    }
+    .ml_img_wrap {
+        height: 5rem;
+    }
+    .ml_text {
+        display: flex;
+        align-items: start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        /* 767px */
+        flex-direction: column;
+    }
+    .ml_title {
+        padding: 0px;
+        margin: 0px;
+        font-size: 150%;
+        /* 767px */
+        text-align: start;
+        word-break: keep-all;
+    }
+    /* -------------------------------- */
+    .searchBox {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        box-sizing: border-box;
+        /* border-radius: 2rem; */
+        background-color: white;
+        margin: 3rem auto;
+        padding: 0.5rem 0 0;
+        height: fit-content;
+    }
+    .sb_title{
+        position: absolute;
+        bottom: 100%;
+        left: 5%;
+        font-size: 200%;
+        color: white;
+        width: 90%;
+        font-family: 'NanumSquareNeoBold';
+    }
+    .sb_inputWrap {
+        width: 100%;
+        margin: auto;
+        position: relative;
+    }
+    .searchBox input {
+        width: 80%;
+        font-size: 100%;
+        padding: 0.5rem 5%;
+        box-sizing: border-box;
+        border: 0;
+        border-bottom: 2px solid #aaa;
+        outline: none;
+        z-index: 8000;
+    }
+    .inputBox_sb {
+        z-index: 8000;
+        /* 767px */
+    }
+
+    .sb_btn {
+        font-size: 0;
+        position: static;
+        right: 0;
+        top: 0;
+        border-width: 0px;
+        border-style: solid;
+        border-color: #aaaaaa;
+        background: transparent url('../../assets/img/search.svg') center/2rem no-repeat;
+        aspect-ratio: auto;
+        height: 2rem;
+        cursor: pointer;
+        transition: .5s ease;
+        /* 767px */
+        border-bottom-width: 2px;
+        float: right;
+        width: 20%;
+    }
+}
