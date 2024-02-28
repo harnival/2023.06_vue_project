@@ -122,6 +122,7 @@
                                 </div>
                             </div>
                         </div>
+<<<<<<< HEAD
                         <div class="ml_menu">
                             <button type="button" class="ml_m_add listup" @click="openMenu(item.id)">메뉴 열기</button>
                             <div class="ml_m_list" v-if="openMenuPop == item.id">
@@ -144,6 +145,18 @@
                                     </li>
                                 </ul>
                             </div>
+=======
+                    </div>
+                    <div class="ml_menu">
+                        <button type="button" class="ml_m_add listup" @click.prevent="clickAdd(item.id)">플레이리스트에 추가</button>
+                        <div class="ml_m_mylist" v-if="openAddPop == item.id">
+                            <ul>
+                                <li>+ 새 플레이리스트 만들기</li>
+                                <li v-for="lists in userPlaylist.value" >
+                                    <a href="/" @click.prevent="addToList(lists,item)">{{ store.getters.getDataPlaylists[lists].title }}</a>
+                                </li>
+                            </ul>
+>>>>>>> 1249bbd2b2e0e221b254e4066128df3e2f236f15
                         </div>
                     </li>
                 </ul>
@@ -310,6 +323,7 @@ async function getId(event){ // 검색 시 데이터 호출
     videoCalled.value = null
 }
 // 클릭 이벤트 ====================================================================================================//
+<<<<<<< HEAD
 function addToList(key,item){   // 해당 음악을 playlist 디렉토리에 추가 (key : platlist디렉토리 키, item : 음악 정보)
     const get1 = store.getters.getUserPlaylists[key].tracks;
     const getLen = Object.keys(get1).length;
@@ -324,6 +338,13 @@ function addToList(key,item){   // 해당 음악을 playlist 디렉토리에 추
     }else{
         return alert("이미 추가된 곡입니다.")
     }
+=======
+
+const clickAdd = function(key){ // 플레이리스트에 곡 추가하기 위해 버튼 클릭 (key : account의 playlist 목록)
+    console.log("[userPlaylist]",userPlaylist)
+    console.log("[store]",store.getters.getDataPlaylists)
+    openAddPop.value = openAddPop.value == key? null : key; // 해당 key를 가진 element만 열림
+>>>>>>> 1249bbd2b2e0e221b254e4066128df3e2f236f15
 }
 function openMenu(id){
     openMenuPop.value = openMenuPop.value == id? null : id;
